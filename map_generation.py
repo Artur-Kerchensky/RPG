@@ -1,5 +1,6 @@
 import math
 import pygame
+from DataBase import Base
 
 
 def findnoise2(x, y):
@@ -33,12 +34,11 @@ def filling_table(height, width, sid):
     table = [[0 for _ in range(width)] for _ in range(height)]
     for h in range(0, height):
         for w in range(0, width):
-            table[h][w] = f(h, w, sid)
+            table[h][w] = perlig_noise(h, w, sid)
     return table
 
 
-def f(x, y, sid):
-    #  sid = [2, 4, 8]
+def perlig_noise(x, y, sid):
     scale1 = sid[0] / 10
     scale2 = sid[1] / 10
     scale3 = sid[2] / 10
@@ -52,16 +52,21 @@ def f(x, y, sid):
     return meaning
 
 
-class biom:
-    def __init__(self, name, altitude, color):
+class Biom:
+    def __init__(self, name, color, min_altitude, max_altitude):
         self.name = name
         self.color = color
-        self.altitude = altitude
+        self.min_altitude = min_altitude
+        self.max_altitude = max_altitude
 
-    def get_color(self, h):
-        if self.altitude[0] <= h <= self.altitude[1]:
-            return self.color
-        return False
+    def get_color(self):
+        return self.color
+
+    def get_min_altitude(self):
+        return self.min_altitude
+
+    def get_max_altitude(self):
+        return self.max_altitude
 
 
 class Map:
@@ -69,43 +74,23 @@ class Map:
         self.width = width
         self.height = height
         self.board = filling_table(height, width, sid)
-        self.left = 0
-        self.top = 0
-        self.cell_size = cell_size
-
-    def set_view(self, left, top, cell_size):
-        self.left = left
-        self.top = top
         self.cell_size = cell_size
 
     def render(self, screen):
         for height in range(self.height):
             for width in range(self.width):
-                left, top = self.left + width * self.cell_size, self.top + height * self.cell_size
-                for i in BIOM:
-                    color = BIOM[i].get_color(self.board[height][width])
-                    if color:
-                        pygame.draw.rect(screen, color, [left, top, self.cell_size, self.cell_size])
-
-    def get_cell(self, mouse_pos):
-        if self.left <= mouse_pos[0] <= self.left + self.cell_size * self.height and \
-                self.top <= mouse_pos[1] <= self.top + self.cell_size * self.width:
-            num_w, num_h = (mouse_pos[0] - self.left) // self.cell_size, (mouse_pos[1] - self.top) // self.cell_size,
-            return num_h, num_w
-        return None
-
-    def on_click(self, cell_coords):
-        if cell_coords is not None:
-            x, y = cell_coords[0], cell_coords[1]
-
-    def get_click(self, mouse_pos):
-        cell = self.get_cell(mouse_pos)
-        self.on_click(cell)
+                left, top = width * self.cell_size, height * self.cell_size
+                color = get_bioms(self.board[height][width])
+                pygame.draw.rect(screen, pygame.Color(color), [left, top, self.cell_size, self.cell_size])
 
 
-BIOM = {'Sea': biom('sea', (0, 99), 'blue'),
-    'Beach': biom('beach', (100, 119), 'yellow'),
-    'Meadows': biom('meadows', (120, 139), 'green'),
-    'forest': biom('forest', (140, 179), 'darkgreen'),
-    'stone': biom('stone', (180, 210), 'grey'),
-    'mountains': biom('mountains', (210, 255), 'white')}
+def get_bioms(altitude):
+    return bd.get_all_information('color', 'Bioms', f'min_altitude <= {altitude} and {altitude} <= max_altitude')[0][0]
+
+
+bd = Base()
+BIOMS = {}
+for biom in bd.get_all_information('*', 'Bioms'):
+    id, name, color, min_altitude, max_altitude = (j for j in biom)
+    BIOMS[id] = Biom(name, color, min_altitude, max_altitude)
+
