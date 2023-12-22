@@ -1,5 +1,7 @@
 import math
+
 import pygame
+
 from DataBase import Base
 
 
@@ -30,11 +32,15 @@ def noise(x, y):
     return interpolate(int1, int2, y - floory)
 
 
-def filling_table(height, width, sid):
-    table = [[0 for _ in range(width)] for _ in range(height)]
-    for h in range(0, height):
-        for w in range(0, width):
-            table[h][w] = perlig_noise(h, w, sid)
+def filling_table(x, y, height, width, sid):
+    table = [[] for _ in range(NUM_OF_CELLS_CHUNK)]
+    for h in range(y, height + y):
+        for w in range(x, width + x):
+            if y != 0:
+                res = h % abs(y)
+            else:
+                res = h
+            table[res].append(get_bioms(perlig_noise(h, w, sid)))
     return table
 
 
@@ -50,6 +56,19 @@ def perlig_noise(x, y, sid):
     elif meaning < 0:
         meaning = 0
     return meaning
+
+
+def join_table(list_table, direction='width'):
+    if direction == 'width':
+        result = [[] for _ in range(len(list_table[0]))]
+        for i in range(len(list_table)):
+            for j in range(len(list_table[i])):
+                result[j] += (list_table[i][j])
+    elif direction == 'height':
+        result = []
+        for i in range(len(list_table)):
+            result += list_table[i]
+    return result
 
 
 class Biom:
@@ -70,27 +89,65 @@ class Biom:
 
 
 class Map:
-    def __init__(self, height, width, cell_size, sid):
+    def __init__(self, height, width, cell_size, sid, load_chunk=1):
         self.width = width
         self.height = height
-        self.board = filling_table(height, width, sid)
+        self.chunks = []
+        self.board = []
+        for i in range(0, 3):
+            for j in range(0, 3):
+                self.chunks.append(Chunk(i, -NUM_OF_CELLS_CHUNK + NUM_OF_CELLS_CHUNK * j,
+                                         -NUM_OF_CELLS_CHUNK + NUM_OF_CELLS_CHUNK * i, sid))
+        for i in range(3):
+            self.board.append(join_table(list(i.get_chunk() for i in self.chunks[3 * i:3 * (i + 1)])))
+        self.board = join_table(self.board, direction='height')
+
         self.cell_size = cell_size
 
     def render(self, screen):
         for height in range(self.height):
             for width in range(self.width):
                 left, top = width * self.cell_size, height * self.cell_size
-                color = get_bioms(self.board[height][width])
+                color = BIOMS[self.board[height][width]].get_color()
                 pygame.draw.rect(screen, pygame.Color(color), [left, top, self.cell_size, self.cell_size])
 
 
+class Chunk:
+    def __init__(self, id, x, y, sid):
+        self.id = id
+        self.x, self.y = x, y
+        self.table = filling_table(x, y, NUM_OF_CELLS_CHUNK, NUM_OF_CELLS_CHUNK, sid)
+
+    def get_chunk(self):
+        return self.table
+
+    def get_coord(self):
+        return self.x, self.y
+
+    def get_id(self):
+        return self.id
+
+
 def get_bioms(altitude):
-    return bd.get_all_information('color', 'Bioms', f'min_altitude <= {altitude} and {altitude} <= max_altitude')[0][0]
+    return bd.get_all_information('id', 'Bioms', f'min_altitude <= {altitude} and {altitude} <= max_altitude')[0][0]
 
 
 bd = Base()
+NUM_OF_CELLS_CHUNK = 64
 BIOMS = {}
+CHUNKS = {}
 for biom in bd.get_all_information('*', 'Bioms'):
     id, name, color, min_altitude, max_altitude = (j for j in biom)
     BIOMS[id] = Biom(name, color, min_altitude, max_altitude)
 
+#           ! ! !       ! ! !       ! ! !
+#           ! 1 2       1 2 3       2 3 !
+#           ! 4 5       4 5 6       5 6 !
+
+#           ! 1 2       1 2 3       2 3 !
+#           ! 4 5       4 5 6       5 6 !
+#           ! 7 8       7 8 9       8 9 !
+
+#           ! 4 5       4 5 6       5 6 !
+#           ! 7 8       7 8 9       8 9 !
+#           ! ! !       ! ! !       ! ! !
