@@ -45,6 +45,7 @@ def filling_table(x, y, height, width, sid):
 
 
 def perlig_noise(x, y, sid):
+    x, y = abs(x), abs(y)
     scale1 = sid[0] / 10
     scale2 = sid[1] / 10
     scale3 = sid[2] / 10
@@ -59,13 +60,13 @@ def perlig_noise(x, y, sid):
 
 
 def join_table(list_table, direction='width'):
+    result = []
     if direction == 'width':
         result = [[] for _ in range(len(list_table[0]))]
         for i in range(len(list_table)):
             for j in range(len(list_table[i])):
                 result[j] += (list_table[i][j])
     elif direction == 'height':
-        result = []
         for i in range(len(list_table)):
             result += list_table[i]
     return result
@@ -116,7 +117,8 @@ class Chunk:
     def __init__(self, id, x, y, sid):
         self.id = id
         self.x, self.y = x, y
-        self.table = filling_table(x, y, NUM_OF_CELLS_CHUNK, NUM_OF_CELLS_CHUNK, sid)
+        self.num = NUM_OF_CELLS_CHUNK
+        self.table = filling_table(x, y, self.num, self.num, sid)
 
     def get_chunk(self):
         return self.table
@@ -129,12 +131,15 @@ class Chunk:
 
 
 def get_bioms(altitude):
-    return bd.get_all_information('id', 'Bioms', f'min_altitude <= {altitude} and {altitude} <= max_altitude')[0][0]
+    res = bd.get_all_information('id', 'Bioms', f'min_altitude <= {altitude} and {altitude} <= max_altitude')
+    if res:
+        return res[0][0]
+    return 0
 
 
 bd = Base()
-NUM_OF_CELLS_CHUNK = 64
 BIOMS = {}
+NUM_OF_CELLS_CHUNK = 64
 CHUNKS = {}
 for biom in bd.get_all_information('*', 'Bioms'):
     id, name, color, min_altitude, max_altitude = (j for j in biom)

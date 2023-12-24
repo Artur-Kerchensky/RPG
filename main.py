@@ -1,16 +1,15 @@
-from map_generation import Map
+from map_generation import Map, NUM_OF_CELLS_CHUNK
 import pygame
 from random import randint
 
 if __name__ == '__main__':
     pygame.init()
     pygame.display.set_caption('Генератор мира')
-    # SID = [randint(40, 60), randint(300, 900), randint(70, 90)]
-    SID = [20, 40, 80]
-    #  base sid = [20, 40, 80]
+    # SID = [randint(40, 60), randint(30, 90), randint(70, 90)]
+    SID = [40, 60, 80]
     # 1280 720
-    lines, columns = 64 * 3, 64 * 3
-    cell_size = 2
+    lines, columns = NUM_OF_CELLS_CHUNK * 3, NUM_OF_CELLS_CHUNK * 3
+    cell_size = 4
     size = width, height = columns * cell_size, lines * cell_size
     screen = pygame.display.set_mode(size)
     board = Map(lines, columns, cell_size, SID)
