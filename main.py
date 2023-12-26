@@ -1,16 +1,14 @@
-# from map_generation import Map
 import pygame
-# import os
-# import sys
-from random import randint
+import os
+import sys
 
 
 def load_image(name, colorkey=None):
-    # fullname = os.path.join('Project2', name)
-    # if not os.path.isfile(fullname):
-    #     print(f"Файл с изображением '{fullname}' не найден")
-    #     sys.exit()
-    image = pygame.image.load(name)
+    fullname = os.path.join('menu', name)
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        sys.exit()
+    image = pygame.image.load("menu/" + name)
     if colorkey is not None:
         image = image.convert()
         if colorkey == -1:
@@ -64,16 +62,6 @@ if __name__ == '__main__':
     HEIGHT = 394
 
     pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    screen = pygame.display.set_mode((WIDTH, HEIGHT), flags=pygame.NOFRAME)
     clock = pygame.time.Clock()
     start_screen()
-    # running = True
-    # while running:
-    #     for event in pygame.event.get():
-    #         if event.type == pygame.QUIT:
-    #             running = False
-    #
-    #         if event.type == pygame.MOUSEBUTTONDOWN:
-    #             SID = [randint(40, 60), randint(70, 90), randint(70, 90)]
-    #             # board = Map(lines, columns, cell_size, SID)
-    # pygame.quit()
