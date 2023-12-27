@@ -1,7 +1,5 @@
 import math
 
-import pygame
-
 from DataBase import Base
 
 
@@ -33,7 +31,7 @@ def noise(x, y):
 
 
 def filling_table(x, y, height, width, sid):
-    table = [[] for _ in range(NUM_OF_CELLS_CHUNK)]
+    table = [[] for _ in range(height)]
     for h in range(y, height + y):
         for w in range(x, width + x):
             if y != 0:
@@ -72,6 +70,13 @@ def join_table(list_table, direction='width'):
     return result
 
 
+def get_bioms(altitude):
+    res = bd.get_all_information('id', 'Bioms', f'min_altitude <= {altitude} and {altitude} <= max_altitude')
+    if res:
+        return res[0][0]
+    return 0
+
+
 class Biom:
     def __init__(self, name, color, min_altitude, max_altitude):
         self.name = name
@@ -89,58 +94,8 @@ class Biom:
         return self.max_altitude
 
 
-class Map:
-    def __init__(self, height, width, cell_size, sid, load_chunk=1):
-        self.width = width
-        self.height = height
-        self.chunks = []
-        self.board = []
-        for i in range(0, 3):
-            for j in range(0, 3):
-                self.chunks.append(Chunk(i, -NUM_OF_CELLS_CHUNK + NUM_OF_CELLS_CHUNK * j,
-                                         -NUM_OF_CELLS_CHUNK + NUM_OF_CELLS_CHUNK * i, sid))
-        for i in range(3):
-            self.board.append(join_table(list(i.get_chunk() for i in self.chunks[3 * i:3 * (i + 1)])))
-        self.board = join_table(self.board, direction='height')
-
-        self.cell_size = cell_size
-
-    def render(self, screen):
-        for height in range(self.height):
-            for width in range(self.width):
-                left, top = width * self.cell_size, height * self.cell_size
-                color = BIOMS[self.board[height][width]].get_color()
-                pygame.draw.rect(screen, pygame.Color(color), [left, top, self.cell_size, self.cell_size])
-
-
-class Chunk:
-    def __init__(self, id, x, y, sid):
-        self.id = id
-        self.x, self.y = x, y
-        self.num = NUM_OF_CELLS_CHUNK
-        self.table = filling_table(x, y, self.num, self.num, sid)
-
-    def get_chunk(self):
-        return self.table
-
-    def get_coord(self):
-        return self.x, self.y
-
-    def get_id(self):
-        return self.id
-
-
-def get_bioms(altitude):
-    res = bd.get_all_information('id', 'Bioms', f'min_altitude <= {altitude} and {altitude} <= max_altitude')
-    if res:
-        return res[0][0]
-    return 0
-
-
 bd = Base()
 BIOMS = {}
-NUM_OF_CELLS_CHUNK = 64
-CHUNKS = {}
 for biom in bd.get_all_information('*', 'Bioms'):
     id, name, color, min_altitude, max_altitude = (j for j in biom)
     BIOMS[id] = Biom(name, color, min_altitude, max_altitude)
