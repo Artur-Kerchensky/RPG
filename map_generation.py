@@ -30,18 +30,6 @@ def noise(x, y):
     return interpolate(int1, int2, y - floory)
 
 
-def filling_table(x, y, height, width, sid):
-    table = [[] for _ in range(height)]
-    for h in range(y, height + y):
-        for w in range(x, width + x):
-            if y != 0:
-                res = h % abs(y)
-            else:
-                res = h
-            table[res].append(get_bioms(perlig_noise(h, w, sid)))
-    return table
-
-
 def perlig_noise(x, y, sid):
     x, y = abs(x), abs(y)
     scale1 = sid[0] / 10
@@ -55,6 +43,18 @@ def perlig_noise(x, y, sid):
     elif meaning < 0:
         meaning = 0
     return meaning
+
+
+def filling_table(x, y, height, width, sid):
+    table = [[] for _ in range(height)]
+    for h in range(y, height + y):
+        for w in range(x, width + x):
+            if y != 0:
+                res = h % abs(y)
+            else:
+                res = h
+            table[res].append(get_bioms(perlig_noise(h, w, sid)))
+    return table
 
 
 def join_table(list_table, direction='width'):
