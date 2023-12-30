@@ -1,5 +1,5 @@
 import math
-import pygame
+
 from DataBase import Base
 
 
@@ -30,15 +30,8 @@ def noise(x, y):
     return interpolate(int1, int2, y - floory)
 
 
-def filling_table(height, width, sid):
-    table = [[0 for _ in range(width)] for _ in range(height)]
-    for h in range(0, height):
-        for w in range(0, width):
-            table[h][w] = perlig_noise(h, w, sid)
-    return table
-
-
 def perlig_noise(x, y, sid):
+    x, y = abs(x), abs(y)
     scale1 = sid[0] / 10
     scale2 = sid[1] / 10
     scale3 = sid[2] / 10
@@ -50,6 +43,38 @@ def perlig_noise(x, y, sid):
     elif meaning < 0:
         meaning = 0
     return meaning
+
+
+def filling_table(x, y, height, width, sid):
+    table = [[] for _ in range(height)]
+    for h in range(y, height + y):
+        for w in range(x, width + x):
+            if y != 0:
+                res = h % abs(y)
+            else:
+                res = h
+            table[res].append(get_bioms(perlig_noise(h, w, sid)))
+    return table
+
+
+def join_table(list_table, direction='width'):
+    result = []
+    if direction == 'width':
+        result = [[] for _ in range(len(list_table[0]))]
+        for i in range(len(list_table)):
+            for j in range(len(list_table[i])):
+                result[j] += (list_table[i][j])
+    elif direction == 'height':
+        for i in range(len(list_table)):
+            result += list_table[i]
+    return result
+
+
+def get_bioms(altitude):
+    res = bd.get_all_information('id', 'Bioms', f'min_altitude <= {altitude} and {altitude} <= max_altitude')
+    if res:
+        return res[0][0]
+    return 0
 
 
 class Biom:
@@ -69,28 +94,20 @@ class Biom:
         return self.max_altitude
 
 
-class Map:
-    def __init__(self, height, width, cell_size, sid):
-        self.width = width
-        self.height = height
-        self.board = filling_table(height, width, sid)
-        self.cell_size = cell_size
-
-    def render(self, screen):
-        for height in range(self.height):
-            for width in range(self.width):
-                left, top = width * self.cell_size, height * self.cell_size
-                color = get_bioms(self.board[height][width])
-                pygame.draw.rect(screen, pygame.Color(color), [left, top, self.cell_size, self.cell_size])
-
-
-def get_bioms(altitude):
-    return bd.get_all_information('color', 'Bioms', f'min_altitude <= {altitude} and {altitude} <= max_altitude')[0][0]
-
-
 bd = Base()
 BIOMS = {}
 for biom in bd.get_all_information('*', 'Bioms'):
     id, name, color, min_altitude, max_altitude = (j for j in biom)
     BIOMS[id] = Biom(name, color, min_altitude, max_altitude)
 
+#           ! ! !       ! ! !       ! ! !
+#           ! 1 2       1 2 3       2 3 !
+#           ! 4 5       4 5 6       5 6 !
+
+#           ! 1 2       1 2 3       2 3 !
+#           ! 4 5       4 5 6       5 6 !
+#           ! 7 8       7 8 9       8 9 !
+
+#           ! 4 5       4 5 6       5 6 !
+#           ! 7 8       7 8 9       8 9 !
+#           ! ! !       ! ! !       ! ! !
