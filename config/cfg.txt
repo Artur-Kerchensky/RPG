@@ -1,4 +1,4 @@
 resolutionWidth=1280
 resolutionHeight=720
 anySaves=0
-difficult=1
+difficult=0
