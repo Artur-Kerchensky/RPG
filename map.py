@@ -1,5 +1,5 @@
-from map_generation import filling_table, join_table, BIOMS
 import pygame
+from map_generation import filling_table, join_table, BIOMS
 from config.config import NUM_OF_CELLS_CHUNK, cell_size
 
 
@@ -63,6 +63,9 @@ class Map:
 
     def get_chunks(self):
         return self.chunks
+
+    def get_board(self):
+        return self.board
 
 
 class Chunk:

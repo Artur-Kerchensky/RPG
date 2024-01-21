@@ -1,10 +1,26 @@
 import pygame
 from config.config import cell_size, NUM_OF_CELLS_CHUNK
 
+num_id = 1
 
-class Creature:
-    def __init__(self, name, start_pos, hp, speed=1, attack=0, defense=0):
+
+class Object:
+    def __init__(self, name, group_sprites):
+        global num_id
+        self.id = num_id
         self.name = name
+
+        self.sprites = group_sprites
+        num_id += 1
+
+    def get_id(self):
+        return self.id
+
+
+class Creature(Object):
+    def __init__(self, name, start_pos, hp, group_sprites=None, speed=1, attack=0, defense=0):
+        #  group_sprites потом поменять во всех дочерних классах
+        Object.__init__(self, name, group_sprites)
         self.x, self.y = start_pos[0], start_pos[1]
         self.hp, self.max_hp = hp
         self.speed = speed
@@ -30,6 +46,12 @@ class Creature:
         return self.x, self.y
 
 
+class Item(Object):
+    def __init__(self, name, weight,  group_sprites=None):
+        #  group_sprites потом поменять
+        Object.__init__(self, name, group_sprites)
+
+
 class Player(Creature):
     def __init__(self, start_pos, hp, speed=cell_size, attack=5, defense=0,
                  level=1, experience=0, attributes=(1, 1, 1)):
@@ -52,3 +74,13 @@ class Player(Creature):
                  NUM_OF_CELLS_CHUNK * cell_size % NUM_OF_CELLS_CHUNK // 2 * cell_size)
         pygame.draw.rect(screen, pygame.Color('red'), (x, y,
                                                        cell_size, cell_size))
+
+
+class Enemy(Creature):
+    def __init__(self, name, start_pos, hp, giv_exp, speed=cell_size//2, attack=5, defense=0):
+        Creature.__init__(self, name, start_pos, hp, speed, attack, defense)
+        self.giv_exp = giv_exp
+        self.path = []
+
+    def pathfinding(self, pos, chart):
+        board = chart.get_board()
