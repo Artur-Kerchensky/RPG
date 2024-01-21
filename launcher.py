@@ -1,6 +1,7 @@
-import pygame
 import os
 import sys
+import pygame
+from configuration import load_config
 
 def blitter(*args):
     components = [elem for elem in args]
@@ -24,6 +25,37 @@ def blitter(*args):
         screen.blit(components[5], (117, 72))
         screen.blit(components[6], (116, 71))
 
+def blitter_load(*args):
+    components = [elem for elem in args]
+    if len(components) == 2:
+        screen.blit(components[0], (120, 70))
+        [screen.blit(components[1], (325, 130 + 60 * i)) for i in range(3)]
+        [screen.fill((63, 52, 39), (182, 110 + 60 * i, 330 + 5 * i, 2)) for i in range(4)]
+    else:
+        screen.blit(components[0], (120, 70))
+        epic_1 = pygame.font.SysFont('monotypecorsiva', 56).render('В разработке', True, (63, 52, 39))
+        epic_2 = pygame.transform.rotate(epic_1, -22.5)
+        screen.blit(epic_2, (210, 110))
+        
+
+def blitter_settings(*args):
+    components = [elem for elem in args]
+    screen.blit(components[0], (120, 70))
+    screen.blit(components[1], (180, 100))
+    screen.blit(components[2], (180, 130))
+    screen.blit(components[3], (400, 130))
+    screen.blit(components[4], (180, 180))
+    screen.blit(components[5], (180, 210))
+    screen.blit(components[6], (290, 210))
+    screen.blit(components[7], (400, 210))
+
+
+def blitter_exit(*args):
+    components = [elem for elem in args]
+    screen.blit(components[0], (175, 165))
+    screen.blit(components[1], (230, 175))
+    screen.blit(components[2], (250, 200))
+    screen.blit(components[3], (410, 200))
 
 def load_image(name, colorkey=None):
     fullname = os.path.join('menu', name)
@@ -42,8 +74,8 @@ def load_image(name, colorkey=None):
 
 
 def start_screen():
-    load_config()
-    data["anySaves"] = 0 # Для переключения режима присутствия/отсутствия сохранений (пока)
+    data = load_config()
+    data["anySaves"] = 1 # Для переключения режима присутствия/отсутствия сохранений (пока)
     font = pygame.font.SysFont('monotypecorsiva', 64)
     title = font.render('The Forgotten Lands', True, (211, 175, 115))
     title_wrap = font.render('The Forgotten Lands', True, (0, 0, 0))
@@ -51,11 +83,33 @@ def start_screen():
     font = pygame.font.SysFont('monotypecorsiva', 30)
     yes = font.render('Да', True, (63, 52, 39))
     no = font.render('Нет', True, (63, 52, 39))
+    res_option1 = font.render('1920x1080', True, (63, 52, 39))
+    res_option2 = font.render('1280x720', True, (63, 52, 39))
+    dif_option1 = font.render('Легкий', True, (63, 52, 39))
+    dif_option2 = font.render('Средний', True, (63, 52, 39))
+    dif_option3 = font.render('Сложный', True, (63, 52, 39))
     yes_wrap = font.render('Да', True, (183, 152, 100))
     no_wrap = font.render('Нет', True, (183, 152, 100))
+    res_option1_wrap = font.render('1920x1080', True, (183, 152, 100))
+    res_option2_wrap = font.render('1280x720', True, (183, 152, 100))
+    dif_option1_wrap = font.render('Легкий', True, (183, 152, 100))
+    dif_option2_wrap = font.render('Средний', True, (183, 152, 100))
+    dif_option3_wrap = font.render('Сложный', True, (183, 152, 100))
+    
+    font = pygame.font.SysFont('monotypecorsiva', 24)
+    settings_res = font.render('Разрешение экрана:', True, (63, 52, 39))
+    settings_dif = font.render('Уровень сложности:', True, (63, 52, 39))
+    empty = font.render('Пусто', True, (63, 52, 39))
+    empty_wrap = font.render('Пусто', True, (183, 152, 100))
     
     font = pygame.font.SysFont('monotypecorsiva', 20)
     question = font.render('Вы действительно хотите выйти?', True, (63, 52, 39))
+    
+    font = pygame.font.SysFont('monotypecorsiva', 16)
+    warning = font.render('Изменения вступят в силу после перезапуска игры', True, (63, 52, 39))
+    
+    medium_context_menu = pygame.transform.scale(load_image("context_menu.png"), (WIDTH // 1.5, HEIGHT // 1.5))
+    small_context_menu = pygame.transform.scale(load_image("context_menu.png"), (WIDTH // 1.9, HEIGHT // 5.1))
     
     if not data["anySaves"]:
         font = pygame.font.SysFont('monotypecorsiva', 24)
@@ -68,6 +122,7 @@ def start_screen():
         load_wrap = font.render('Загрузить', True, (183, 152, 100))
         settings_wrap = font.render('Настройки', True, (183, 152, 100))
         ex_wrap = font.render('Выход', True, (183, 152, 100))
+        
         
         background = pygame.transform.scale(load_image('background_no_saves.jpg'), (WIDTH, HEIGHT))
         access_flag = True
@@ -93,40 +148,77 @@ def start_screen():
                     screen.blit(ex_wrap, (319, 297))
                 elif access_flag:
                     blitter(background, new, load, settings, ex, title_wrap, title)
-                if 250 < x_pos < 286 and 200 < y_pos < 233 and exit_flag:
-                    context_menu = pygame.transform.scale(load_image("context_menu.png"), (WIDTH // 1.9, HEIGHT // 5.1))
-                    screen.blit(context_menu, (175, 165))
-                    screen.blit(question, (230, 175))
-                    screen.blit(yes, (250, 200))
-                    screen.blit(no, (410, 200))
-                    screen.blit(yes_wrap, (250, 200))
-                if 410 < x_pos < 461 and 200 < y_pos < 233 and exit_flag:
-                    context_menu = pygame.transform.scale(load_image("context_menu.png"), (WIDTH // 1.9, HEIGHT // 5.1))
-                    screen.blit(context_menu, (175, 165))
-                    screen.blit(question, (230, 175))
-                    screen.blit(yes, (250, 200))
-                    screen.blit(no, (410, 200))
-                    screen.blit(no_wrap, (410, 200))
                 
+                if 325 < x_pos < 385 and 130 < y_pos < 157 and load_flag:
+                    blitter_load(medium_context_menu, empty)
+                    screen.blit(empty_wrap, (325, 130))
+                elif 325 < x_pos < 385 and 190 < y_pos < 217 and load_flag:
+                    blitter_load(medium_context_menu, empty)
+                    screen.blit(empty_wrap, (325, 190))
+                elif 325 < x_pos < 385 and 250 < y_pos < 277 and load_flag:
+                    blitter_load(medium_context_menu, empty)
+                    screen.blit(empty_wrap, (325, 250))
+                elif load_flag:
+                    blitter_load(medium_context_menu, empty)
+
+
+                if 180 < x_pos < 299 and 130 < y_pos < 163 and settings_flag:
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
+                    screen.blit(res_option1_wrap, (180, 130))
+                    screen.blit(warning, (210, 290))
+                elif 400 < x_pos < 506 and 130 < y_pos < 163 and settings_flag:
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
+                    screen.blit(res_option2_wrap, (400, 130))
+                    screen.blit(warning, (210, 290))
+                elif 180 < x_pos < 264 and 210 < y_pos < 243 and settings_flag:
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
+                    screen.blit(dif_option1_wrap, (180, 210))
+                    screen.blit(warning, (210, 290))
+                elif 290 < x_pos < 385 and 210 < y_pos < 243 and settings_flag:
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
+                    screen.blit(dif_option2_wrap, (290, 210))
+                    screen.blit(warning, (210, 290))
+                elif 400 < x_pos < 509 and 210 < y_pos < 243 and settings_flag:
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
+                    screen.blit(dif_option3_wrap, (400, 210))
+                    screen.blit(warning, (210, 290))
+                elif settings_flag:
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
+
+
+                if 250 < x_pos < 286 and 200 < y_pos < 233 and exit_flag:
+                    blitter_exit(small_context_menu, question, yes, no)
+                    screen.blit(yes_wrap, (250, 200))
+                elif 410 < x_pos < 461 and 200 < y_pos < 233 and exit_flag:
+                    blitter_exit(small_context_menu, question, yes, no)
+                    screen.blit(no_wrap, (410, 200))
+                elif exit_flag:
+                    blitter_exit(small_context_menu, question, yes, no)
+
+
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if 282 < x_pos < 416 and 205 < y_pos < 240 and access_flag:
                         access_flag = False
                         load_flag = True
-                        context_menu = pygame.transform.scale(load_image("context_menu.png"), (WIDTH // 1.5, HEIGHT // 1.5))
-                        screen.blit(context_menu, (120, 70))
+                        blitter_load(medium_context_menu, empty)
                     elif 276 < x_pos < 423 and 248 < y_pos < 283 and access_flag:
                         access_flag = False
                         settings_flag = True
-                        context_menu = pygame.transform.scale(load_image("context_menu.png"), (WIDTH // 1.5, HEIGHT // 1.5))
-                        screen.blit(context_menu, (120, 70))
+                        blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
+                    elif 180 < x_pos < 299 and 130 < y_pos < 163 and settings_flag:
+                        load_config((1920, 1080), "res")
+                    elif 400 < x_pos < 506 and 130 < y_pos < 163 and settings_flag:
+                        load_config((1280, 720), "res")
+                    elif 180 < x_pos < 264 and 210 < y_pos < 243 and settings_flag:
+                        load_config(0, "dif")
+                    elif 290 < x_pos < 385 and 210 < y_pos < 243 and settings_flag:
+                        load_config(1, "dif")
+                    elif 400 < x_pos < 509 and 210 < y_pos < 243 and settings_flag:
+                        load_config(2, "dif")
                     elif 307 < x_pos < 391 and 291 < y_pos < 326 and access_flag:
                         access_flag = False
                         exit_flag = True
-                        context_menu = pygame.transform.scale(load_image("context_menu.png"), (WIDTH // 1.9, HEIGHT // 5.1))
-                        screen.blit(context_menu, (175, 165))
-                        screen.blit(question, (230, 175))
-                        screen.blit(yes, (250, 200))
-                        screen.blit(no, (410, 200))
+                        blitter_exit(small_context_menu, question, yes, no)
                     elif 250 < x_pos < 286 and 200 < y_pos < 233 and exit_flag:
                         pygame.quit()
                         sys.exit()
@@ -189,40 +281,64 @@ def start_screen():
                     screen.blit(ex_wrap, (326, 300))
                 elif access_flag:
                     blitter(background, new, load, settings, ex, title_wrap, title, cont)
+                
+                
+                if 180 < x_pos < 299 and 130 < y_pos < 163 and settings_flag:
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
+                    screen.blit(res_option1_wrap, (180, 130))
+                    screen.blit(warning, (210, 290))
+                elif 400 < x_pos < 506 and 130 < y_pos < 163 and settings_flag:
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
+                    screen.blit(res_option2_wrap, (400, 130))
+                    screen.blit(warning, (210, 290))
+                elif 180 < x_pos < 264 and 210 < y_pos < 243 and settings_flag:
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
+                    screen.blit(dif_option1_wrap, (180, 210))
+                    screen.blit(warning, (210, 290))
+                elif 290 < x_pos < 385 and 210 < y_pos < 243 and settings_flag:
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
+                    screen.blit(dif_option2_wrap, (290, 210))
+                    screen.blit(warning, (210, 290))
+                elif 400 < x_pos < 509 and 210 < y_pos < 243 and settings_flag:
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
+                    screen.blit(dif_option3_wrap, (400, 210))
+                    screen.blit(warning, (210, 290))
+                elif settings_flag:
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
+
+
                 if 250 < x_pos < 286 and 200 < y_pos < 233 and exit_flag:
-                    context_menu = pygame.transform.scale(load_image("context_menu.png"), (WIDTH // 1.9, HEIGHT // 5.1))
-                    screen.blit(context_menu, (175, 165))
-                    screen.blit(question, (230, 175))
-                    screen.blit(yes, (250, 200))
-                    screen.blit(no, (410, 200))
+                    blitter_exit(small_context_menu, question, yes, no)
                     screen.blit(yes_wrap, (250, 200))
-                if 410 < x_pos < 461 and 200 < y_pos < 233 and exit_flag:
-                    context_menu = pygame.transform.scale(load_image("context_menu.png"), (WIDTH // 1.9, HEIGHT // 5.1))
-                    screen.blit(context_menu, (175, 165))
-                    screen.blit(question, (230, 175))
-                    screen.blit(yes, (250, 200))
-                    screen.blit(no, (410, 200))
+                elif 410 < x_pos < 461 and 200 < y_pos < 233 and exit_flag:
+                    blitter_exit(small_context_menu, question, yes, no)
                     screen.blit(no_wrap, (410, 200))
+                elif exit_flag:
+                    blitter_exit(small_context_menu, question, yes, no)
                 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if 299 < x_pos < 401 and 227 < y_pos < 254 and access_flag:
                         access_flag = False
                         load_flag = True
-                        context_menu = pygame.transform.scale(load_image("context_menu.png"), (WIDTH // 1.5, HEIGHT // 1.5))
-                        screen.blit(context_menu, (120, 70))
+                        blitter_load(medium_context_menu)
                     elif 276 < x_pos < 423 and 248 < y_pos < 283 and access_flag:
                         access_flag = False
                         settings_flag = True
-                        context_menu = pygame.transform.scale(load_image("context_menu.png"), (WIDTH // 1.5, HEIGHT // 1.5))
-                        screen.blit(context_menu, (120, 70))
+                        screen.blit(medium_context_menu, (120, 70))
+                    elif 180 < x_pos < 299 and 130 < y_pos < 163 and settings_flag:
+                        load_config((1920, 1080), "res")
+                    elif 400 < x_pos < 506 and 130 < y_pos < 163 and settings_flag:
+                        load_config((1280, 720), "res")
+                    elif 180 < x_pos < 264 and 210 < y_pos < 243 and settings_flag:
+                        load_config(0, "dif")
+                    elif 290 < x_pos < 385 and 210 < y_pos < 243 and settings_flag:
+                        load_config(1, "dif")
+                    elif 400 < x_pos < 509 and 210 < y_pos < 243 and settings_flag:
+                        load_config(2, "dif")
                     elif 307 < x_pos < 391 and 291 < y_pos < 326 and access_flag:
                         access_flag = False
                         exit_flag = True
-                        context_menu = pygame.transform.scale(load_image("context_menu.png"), (WIDTH // 1.9, HEIGHT // 5.1))
-                        screen.blit(context_menu, (175, 165))
-                        screen.blit(question, (230, 175))
-                        screen.blit(yes, (250, 200))
-                        screen.blit(no, (410, 200))
+                        blitter_exit(small_context_menu, question, yes, no)
                     elif 250 < x_pos < 286 and 200 < y_pos < 233 and exit_flag:
                         pygame.quit()
                         sys.exit()
@@ -246,21 +362,7 @@ def start_screen():
             pygame.display.flip()
             clock.tick(FPS)
 
-
-def load_config():
-    global data
-    filename = os.path.join('config', "cfg.txt")
-    with open(filename, "r+") as config:
-        raw_data = config.read()[:-1]
-        if not raw_data:
-            config.write("resolutionWidth=1280\n")
-            config.write("resolutionHeight=720\n")
-            config.write("anySaves=0\n")
-            config.write("difficult=1\n")
-        else:
-            data = {item.split("=")[0]: int(item.split("=")[1]) for item in raw_data.split("\n")}          
-
-            
+    
 if __name__ == '__main__':
     pygame.init()
     FPS = 60
