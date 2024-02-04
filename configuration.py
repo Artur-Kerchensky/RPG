@@ -28,7 +28,10 @@ def load_config(*args):
         config = open(filename, "w")
         config.write("resolutionWidth=1280\n")
         config.write("resolutionHeight=720\n")
-        config.write("anySaves=0\n")
+        if os.listdir(path='./saves'):
+            config.write("anySaves=1\n")
+        else:
+            config.write("anySaves=0\n")
         config.write("difficult=1\n")
         config = open(filename, "r+")
         data = {item.split("=")[0]: int(item.split("=")[1]) for item in config.read()[:-1].split("\n")}
