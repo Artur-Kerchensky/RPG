@@ -1,7 +1,12 @@
 import pygame
-from config.config import cell_size, NUM_OF_CELLS_CHUNK
+import random
+from collections import deque
 
-num_id = 1
+
+from config.config import cell_size, NUM_OF_CELLS_CHUNK
+from DataBase import Base
+
+num_id = -1
 
 
 class Object:
@@ -31,23 +36,20 @@ class Creature(Object):
         directions = {'North': (0, -1), 'South': (0, 1), 'East': (1, 0), 'West': (-1, 0)}
         if direction in directions:
             direct_x, direct_y = directions[direction]
-            self.x += self.speed * direct_x
-            self.y += self.speed * direct_y
+            self.x += direct_x
+            self.y += direct_y
 
     def take_damage(self, damage):
         self.hp -= damage * self.defense * 0.01
         if self.hp <= 0:
             self.speed = 0
 
-    def render(self):
-        pass
-
     def get_pos(self):
         return self.x, self.y
 
 
 class Item(Object):
-    def __init__(self, name, weight,  group_sprites=None):
+    def __init__(self, name, group_sprites=None):
         #  group_sprites потом поменять
         Object.__init__(self, name, group_sprites)
 
@@ -72,15 +74,86 @@ class Player(Creature):
     def update(self, screen):
         x = y = (NUM_OF_CELLS_CHUNK // 2 * cell_size -
                  NUM_OF_CELLS_CHUNK * cell_size % NUM_OF_CELLS_CHUNK // 2 * cell_size)
-        pygame.draw.rect(screen, pygame.Color('red'), (x, y,
-                                                       cell_size, cell_size))
+        pygame.draw.rect(screen, pygame.Color('darkviolet'), (x, y, cell_size, cell_size))
 
 
 class Enemy(Creature):
-    def __init__(self, name, start_pos, hp, giv_exp, speed=cell_size//2, attack=5, defense=0):
+    def __init__(self, name, start_pos, hp, giv_exp, speed=cell_size // 2, attack=5, defense=0):
         Creature.__init__(self, name, start_pos, hp, speed, attack, defense)
         self.giv_exp = giv_exp
         self.path = []
 
     def pathfinding(self, pos, chart):
-        board = chart.get_board()
+        self.path = finding_path((self.x, self.y), pos, chart.get_graph(), chart.get_start_chunks())
+        if not self.path:
+            self.path = [' ']
+
+    def update(self, screen, pos):
+        x, y = self.x, self.y
+        pygame.draw.rect(screen, pygame.Color('red'), ((x - pos[0] + NUM_OF_CELLS_CHUNK // 2) * cell_size,
+                                                       (y - pos[1] + NUM_OF_CELLS_CHUNK // 2) * cell_size,
+                                                       cell_size, cell_size))
+
+    def move(self, direction=None):
+        if self.path:
+            Creature.move(self, self.path.pop(-1))
+
+    def __str__(self):
+        return self.name, self.get_pos()
+
+
+def random_enemy(list_pos):
+    res = []
+    bd = Base()
+    enemy_list = bd.get_all_information('*', 'Enemy')
+    enemies = [enemy_list[random.randint(0, len(enemy_list) - 1)] for _ in range(len(list_pos))]
+    i = 0
+    for enemy in enemies:
+        res.append(Enemy(enemy[1], list_pos[i], (enemy[2], enemy[2]), enemy[3]))
+        i += 1
+    return res
+
+
+def finding_path(start, end, graph, grid_start):
+
+    def bfs(start, goal, graph):
+        queue = deque([start])
+        visited = {start: None}
+        while queue:
+            cur_node = queue.popleft()
+            if cur_node == goal:
+                break
+            if graph.get(cur_node):
+                next_nodes = graph[cur_node]
+            else:
+                next_nodes = []
+            for next_node in next_nodes:
+                if next_node not in visited:
+                    queue.append(next_node)
+                    visited[next_node] = cur_node
+        path_head, path_segment = goal, goal
+        res = []
+        while path_segment and path_segment in visited:
+            res.append(path_segment)
+            path_segment = visited[path_segment]
+
+        return res[-1:0:-1]
+
+    def transformation(path):
+        transcription = {(1, 0): 'West', (0, 1): 'North', (-1, 0): 'East', (0, -1): 'South'}
+        res = []
+        x, y = path[0]
+        for i in range(1, len(path)):
+            res.append(transcription[(x - path[i][0], y - path[i][1])])
+            x, y = path[i][0], path[i][1]
+        return res
+
+    start = (start[0] - grid_start[0], start[1] - grid_start[1])
+    end = (end[0] - grid_start[0], end[1] - grid_start[1])
+    if all(abs(i) < NUM_OF_CELLS_CHUNK * 3 for i in start):
+        path = bfs(start, end, graph)
+        if path:
+            return transformation(path)
+        else:
+            return False
+    return False
