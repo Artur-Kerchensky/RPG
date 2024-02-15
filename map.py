@@ -2,7 +2,8 @@ import pygame
 from random import sample
 
 from map_generation import filling_table, join_table, BIOMS
-from config.config import NUM_OF_CELLS_CHUNK, cell_size
+from configuration import NUM_OF_CELLS_CHUNK, cell_size
+from configuration import load_image
 from object import random_enemy
 
 
@@ -22,7 +23,6 @@ class Map:
                 CHUNKS[(x, y)] = Chunk(self.chunk_id, x, y, self.sid)
                 self.chunks[-1].append(CHUNKS[(x, y)])
                 self.chunk_id += 1
-
         self.loading_map()
         self.enemy = []
 
@@ -34,8 +34,11 @@ class Map:
                 try:
                     left = (width - NUM_OF_CELLS_CHUNK - x) * self.cell_size
                     top = (height - NUM_OF_CELLS_CHUNK - y) * self.cell_size
-                    color = BIOMS[self.board[height][width]].get_color()
-                    pygame.draw.rect(screen, pygame.Color(color), [left, top, self.cell_size, self.cell_size])
+                    base_sprite = BIOMS[self.board[height][width]].get_base()
+                    advanced_sprite = BIOMS[self.board[height][width]].get_advanced()
+                    pygame.draw.rect(screen, pygame.Color(0, 0, 0), [left, top, self.cell_size, self.cell_size])
+                    screen.blit(pygame.transform.scale(load_image(base_sprite, "sprites"), (cell_size, cell_size)), (left, top))
+                    screen.blit(pygame.transform.scale(load_image(advanced_sprite, "sprites"), (cell_size, cell_size)), (left, top))
                 except Exception:
                     print('Дальше карты не будет')
 
@@ -110,7 +113,7 @@ class Chunk:
         self.table = filling_table(x, y, NUM_OF_CELLS_CHUNK, NUM_OF_CELLS_CHUNK, sid)
         self.enemy = []
         if enemy:
-            self.spawn_enemy(0)   # Кол-во будет зависеть от сложности
+            self.spawn_enemy(5)   # Кол-во будет зависеть от сложности
 
     def spawn_enemy(self, count_enemy):
         x = sample(range(self.x, self.x + self.num), count_enemy)
@@ -135,6 +138,7 @@ class Camera:
     def __init__(self, map_object):
         self.pos = [0, 0]
         self.map_object = map_object
+        play_ambient()
 
     def move(self, direction):
         directions = {'North': (0, -1), 'South': (0, 1), 'East': (1, 0), 'West': (-1, 0)}

@@ -1,7 +1,7 @@
 import os
 import sys
 import pygame
-from configuration import load_config
+from configuration import load_config, load_image
 
 def blitter(*args):
     components = [elem for elem in args]
@@ -24,6 +24,7 @@ def blitter(*args):
         screen.blit(components[5], (115, 70))
         screen.blit(components[5], (117, 72))
         screen.blit(components[6], (116, 71))
+
 
 def blitter_load(*args):
     components = [elem for elem in args]
@@ -57,25 +58,15 @@ def blitter_exit(*args):
     screen.blit(components[2], (250, 200))
     screen.blit(components[3], (410, 200))
 
-def load_image(name, colorkey=None):
-    fullname = os.path.join('menu', name)
-    if not os.path.isfile(fullname):
-        print(f"Файл с изображением '{fullname}' не найден")
-        sys.exit()
-    image = pygame.image.load("menu/" + name)
-    if colorkey is not None:
-        image = image.convert()
-        if colorkey == -1:
-            colorkey = image.get_at((0, 0))
-        image.set_colorkey(colorkey)
-    else:
-        image = image.convert_alpha()
-    return image
+def play_music():
+    pygame.mixer.music.load("data/music/menu.mp3")
+    pygame.mixer.music.set_volume(0.4)
+    pygame.mixer.music.play(-1)
 
 
 def start_screen():
     data = load_config()
-    data["anySaves"] = 0 # Для переключения режима присутствия/отсутствия сохранений (пока)
+    play_music()
     font = pygame.font.SysFont('monotypecorsiva', 64)
     title = font.render('The Forgotten Lands', True, (211, 175, 115))
     title_wrap = font.render('The Forgotten Lands', True, (0, 0, 0))
@@ -108,8 +99,10 @@ def start_screen():
     font = pygame.font.SysFont('monotypecorsiva', 16)
     warning = font.render('Изменения вступят в силу после перезапуска игры', True, (63, 52, 39))
     
-    medium_context_menu = pygame.transform.scale(load_image("context_menu.png"), (WIDTH // 1.5, HEIGHT // 1.5))
-    small_context_menu = pygame.transform.scale(load_image("context_menu.png"), (WIDTH // 1.9, HEIGHT // 5.1))
+    medium_context_menu = pygame.transform.scale(load_image("context_menu.png", "menu"), (WIDTH // 1.5, HEIGHT // 1.5))
+    small_context_menu = pygame.transform.scale(load_image("context_menu.png", "menu"), (WIDTH // 1.9, HEIGHT // 5.1))
+
+
     
     if not data["anySaves"]:
         font = pygame.font.SysFont('monotypecorsiva', 24)
@@ -122,9 +115,8 @@ def start_screen():
         load_wrap = font.render('Загрузить', True, (183, 152, 100))
         settings_wrap = font.render('Настройки', True, (183, 152, 100))
         ex_wrap = font.render('Выход', True, (183, 152, 100))
-        
-        
-        background = pygame.transform.scale(load_image('background_no_saves.jpg'), (WIDTH, HEIGHT))
+
+        background = pygame.transform.scale(load_image('background_no_saves.jpg', "menu"), (WIDTH, HEIGHT))
         access_flag = True
         load_flag = False
         settings_flag = False
@@ -193,8 +185,10 @@ def start_screen():
                 elif exit_flag:
                     blitter_exit(small_context_menu, question, yes, no)
 
-
                 if event.type == pygame.MOUSEBUTTONDOWN:
+                    if 307 < x_pos < 391 and 162 < y_pos < 197 and access_flag:
+                        pygame.mixer.music.pause()
+                        return True
                     if 282 < x_pos < 416 and 205 < y_pos < 240 and access_flag:
                         access_flag = False
                         load_flag = True
@@ -218,6 +212,7 @@ def start_screen():
                         exit_flag = True
                         blitter_exit(small_context_menu, question, yes, no)
                     elif 250 < x_pos < 286 and 200 < y_pos < 233 and exit_flag:
+                        pygame.mixer.music.pause()
                         pygame.quit()
                         sys.exit()
                     elif 410 < x_pos < 461 and 200 < y_pos < 233 and exit_flag:
@@ -252,7 +247,7 @@ def start_screen():
         settings_wrap = font.render('Настройки', True, (183, 152, 100))
         ex_wrap = font.render('Выход', True, (183, 152, 100))
         
-        background = pygame.transform.scale(load_image('background_saves.jpg'), (WIDTH, HEIGHT))
+        background = pygame.transform.scale(load_image('background_saves.jpg', "menu"), (WIDTH, HEIGHT))
         access_flag = True
         load_flag = False
         settings_flag = False
@@ -279,8 +274,7 @@ def start_screen():
                     screen.blit(ex_wrap, (326, 300))
                 elif access_flag:
                     blitter(background, new, load, settings, ex, title_wrap, title, cont)
-                
-                
+
                 if 180 < x_pos < 299 and 130 < y_pos < 163 and settings_flag:
                     blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
                     screen.blit(res_option1_wrap, (180, 130))
@@ -304,7 +298,6 @@ def start_screen():
                 elif settings_flag:
                     blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
 
-
                 if 250 < x_pos < 286 and 200 < y_pos < 233 and exit_flag:
                     blitter_exit(small_context_menu, question, yes, no)
                     screen.blit(yes_wrap, (250, 200))
@@ -315,7 +308,13 @@ def start_screen():
                     blitter_exit(small_context_menu, question, yes, no)
                 
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    if 299 < x_pos < 401 and 227 < y_pos < 254 and access_flag:
+                    if 288 < x_pos < 412 and 157 < y_pos < 184 and access_flag:
+                        pygame.mixer.music.pause()
+                        return True
+                    elif 316 < x_pos < 381 and 192 < y_pos < 219 and access_flag:
+                        pygame.mixer.music.pause()
+                        return True
+                    elif 299 < x_pos < 401 and 227 < y_pos < 254 and access_flag:
                         access_flag = False
                         load_flag = True
                         blitter_load(medium_context_menu)
@@ -338,6 +337,7 @@ def start_screen():
                         exit_flag = True
                         blitter_exit(small_context_menu, question, yes, no)
                     elif 250 < x_pos < 286 and 200 < y_pos < 233 and exit_flag:
+                        pygame.mixer.music.pause()
                         pygame.quit()
                         sys.exit()
                     elif 410 < x_pos < 461 and 200 < y_pos < 233 and exit_flag:
@@ -360,14 +360,16 @@ def start_screen():
             pygame.display.flip()
             clock.tick(FPS)
 
-    
+
+FPS = 60
+WIDTH = 700
+HEIGHT = 394
+screen = pygame.display.set_mode((WIDTH, HEIGHT), flags=pygame.NOFRAME)
+pygame.display.set_caption('The Forgotten Lands')
+pygame.display.set_icon(load_image("icon.jpg", "menu"))
+clock = pygame.time.Clock()
+
+
 if __name__ == '__main__':
     pygame.init()
-    FPS = 60
-    WIDTH = 700
-    HEIGHT = 394
-
-    pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT), flags=pygame.NOFRAME)
-    clock = pygame.time.Clock()
     start_screen()

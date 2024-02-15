@@ -2,9 +2,8 @@ import pygame
 import random
 from collections import deque
 
-
-from config.config import cell_size, NUM_OF_CELLS_CHUNK
-from DataBase import Base
+from configuration import cell_size, NUM_OF_CELLS_CHUNK, load_image
+from database import Base
 
 num_id = -1
 
@@ -61,6 +60,11 @@ class Player(Creature):
         self.level = level
         self.experience = experience
         self.attributes = {'strength': attributes[0], 'agility': attributes[1], 'intelligence': attributes[2]}
+        self.walk = {"West": [load_image(f"walk_left{i}.png", "anims") for i in range(1, 5)],
+                     "East": [load_image(f"walk_right{i}.png", "anims") for i in range(1, 5)],
+                     "North": [load_image(f"walk_up{i}.png", "anims") for i in range(1, 5)],
+                     "South": [load_image(f"walk_down{i}.png", "anims") for i in range(1, 5)]}
+        self.player_anim_count = 0
 
     def level_up(self, attribute):
         if self.experience >= 100:
@@ -71,10 +75,14 @@ class Player(Creature):
     def gain_experience(self, exp):
         self.experience += exp
 
-    def update(self, screen):
+    def update(self, screen, direction):
+        if direction in self.walk.keys():
+            self.player_anim_count = (self.player_anim_count + 1) % 4
+
+    def render(self, screen, direction):
         x = y = (NUM_OF_CELLS_CHUNK // 2 * cell_size -
                  NUM_OF_CELLS_CHUNK * cell_size % NUM_OF_CELLS_CHUNK // 2 * cell_size)
-        pygame.draw.rect(screen, pygame.Color('darkviolet'), (x, y, cell_size, cell_size))
+        screen.blit(self.walk[direction][self.player_anim_count], (x + (0.1 * cell_size), y - (0.4 * cell_size)))
 
 
 class Enemy(Creature):
