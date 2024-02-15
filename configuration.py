@@ -1,9 +1,26 @@
 import os
 import sys
+import pygame
+
+def load_image(name, folder, colorkey=None):
+    fullname = os.path.join(f"data\{folder}", name)
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        sys.exit()
+    image = pygame.image.load(f"data/{folder}" + "/" + name)
+    if colorkey is not None:
+        image = image.convert()
+        if colorkey == -1:
+            colorkey = image.get_at((0, 0))
+        image.set_colorkey(colorkey)
+    else:
+        image = image.convert_alpha()
+    return image
+
 
 def load_config(*args):
     global data
-    filename = os.path.join('config', "cfg.txt")
+    filename = os.path.join('data/config', "cfg.txt")
     config = open(filename, "r+")
     raw_data = config.read()[:-1]
     if raw_data and args:
@@ -28,7 +45,7 @@ def load_config(*args):
         config = open(filename, "w")
         config.write("resolutionWidth=1280\n")
         config.write("resolutionHeight=720\n")
-        if os.listdir(path='./saves'):
+        if os.listdir(path='data/saves'):
             config.write("anySaves=1\n")
         else:
             config.write("anySaves=0\n")
@@ -37,3 +54,7 @@ def load_config(*args):
         data = {item.split("=")[0]: int(item.split("=")[1]) for item in config.read()[:-1].split("\n")}
     config.close()
     return data
+
+
+NUM_OF_CELLS_CHUNK = 31
+cell_size = 20

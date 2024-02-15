@@ -1,9 +1,14 @@
 import pygame
-from random import sample
-
 from map_generation import filling_table, join_table, BIOMS
-from config.config import NUM_OF_CELLS_CHUNK, cell_size
-from object import random_enemy
+from configuration import NUM_OF_CELLS_CHUNK, cell_size
+from configuration import load_image
+from random import choice
+
+def play_ambient():
+    ambient = choice(["ambient1.mp3", "ambient2.mp3", "ambient3.mp3", "ambient4.mp3"])
+    pygame.mixer.music.load(f"data/music/{ambient}")
+    pygame.mixer.music.set_volume(0.4)
+    pygame.mixer.music.play(-1)
 
 
 class Map:
@@ -15,72 +20,58 @@ class Map:
         self.chunk_id = 0
         self.chunks = []
         self.board = []
-        for i in [-1.5, -0.5, 0.5]:
+        for i in [-3, -1, 1]:
             self.chunks.append([])
-            for j in [-1.5, -0.5, 0.5]:
-                x, y = int(self.start_x + NUM_OF_CELLS_CHUNK * j), int(self.start_y + NUM_OF_CELLS_CHUNK * i)
-                CHUNKS[(x, y)] = Chunk(self.chunk_id, x, y, self.sid)
-                self.chunks[-1].append(CHUNKS[(x, y)])
+            for j in [-3, -1, 1]:
+                self.chunks[-1].append(Chunk(self.chunk_id, (2 * self.start_x + NUM_OF_CELLS_CHUNK * j) // 2,
+                                             (2 * self.start_y + NUM_OF_CELLS_CHUNK * i) // 2, self.sid))
                 self.chunk_id += 1
-
         self.loading_map()
-        self.enemy = []
 
     def render(self, screen, pos):
         x = pos[0]
         y = pos[1]
         for height in range(NUM_OF_CELLS_CHUNK + y, NUM_OF_CELLS_CHUNK * 2 + y):
             for width in range(NUM_OF_CELLS_CHUNK + x, NUM_OF_CELLS_CHUNK * 2 + x):
-                try:
-                    left = (width - NUM_OF_CELLS_CHUNK - x) * self.cell_size
-                    top = (height - NUM_OF_CELLS_CHUNK - y) * self.cell_size
-                    color = BIOMS[self.board[height][width]].get_color()
-                    pygame.draw.rect(screen, pygame.Color(color), [left, top, self.cell_size, self.cell_size])
-                except Exception:
-                    print('Дальше карты не будет')
+                left = (width - NUM_OF_CELLS_CHUNK - x) * self.cell_size
+                top = (height - NUM_OF_CELLS_CHUNK - y) * self.cell_size
+                base_sprite = BIOMS[self.board[height][width]].get_base()
+                advanced_sprite = BIOMS[self.board[height][width]].get_advanced()
+                pygame.draw.rect(screen, pygame.Color(0, 0, 0), [left, top, self.cell_size, self.cell_size])
+                screen.blit(pygame.transform.scale(load_image(base_sprite, "sprites"), (cell_size, cell_size)), (left, top))
+                screen.blit(pygame.transform.scale(load_image(advanced_sprite, "sprites"), (cell_size, cell_size)), (left, top))
+                
 
     def loading_map(self):
         self.board = []
         for list_chunks in self.chunks:
             self.board.append(join_table(list(chunk.get_chunk() for chunk in list_chunks)))
+
         self.board = join_table(self.board, direction='height')
-        self.graph = creat_graph(self.board)
 
     def chunk_update(self, pos):
         x, y = pos[0], pos[1]
         if abs(x) > NUM_OF_CELLS_CHUNK // 2:
             coof = 0 if x < NUM_OF_CELLS_CHUNK // 2 else -1
             for i in range(len(self.chunks)):
-                x = self.chunks[i][coof].get_coords()[0] - (NUM_OF_CELLS_CHUNK if not coof else - NUM_OF_CELLS_CHUNK)
-                y = self.chunks[i][coof].get_coords()[1]
-                if not CHUNKS.get((x, y)):
-                    CHUNKS[(x, y)] = Chunk(self.chunk_id, x, y, self.sid, enemy=True)
-                    self.chunk_id += 1
-
-                new_chunk = CHUNKS[(x, y)]
+                new_chunk = Chunk(self.chunk_id,
+                                  self.chunks[i][coof].get_coords()[0] - (NUM_OF_CELLS_CHUNK if not coof
+                                                                          else - NUM_OF_CELLS_CHUNK),
+                                  self.chunks[i][coof].get_coords()[1], self.sid)
                 self.chunks[i] = [new_chunk] + self.chunks[i][:2] if not coof else self.chunks[i][1:] + [new_chunk]
         else:
+            #  abs(y) > NUM_OF_CELLS_CHUNK
             new_chunks = [[]]
             coof = 0 if y < NUM_OF_CELLS_CHUNK // 2 else -1
 
             for chunk in self.chunks[coof]:
-                x = chunk.get_coords()[0]
-                y = chunk.get_coords()[1] - NUM_OF_CELLS_CHUNK if not coof\
-                    else chunk.get_coords()[1] + NUM_OF_CELLS_CHUNK
-                if not CHUNKS.get((x, y)):
-                    CHUNKS[(x, y)] = Chunk(self.chunk_id, x, y, self.sid, enemy=True)
-                    self.chunk_id += 1
-                new_chunks[0].append(CHUNKS[(x, y)])
+                new_chunks[0].append(Chunk(self.chunk_id, chunk.get_coords()[0],
+                                           chunk.get_coords()[1] - NUM_OF_CELLS_CHUNK if not coof
+                                           else chunk.get_coords()[1] + NUM_OF_CELLS_CHUNK, self.sid))
+                self.chunk_id += 1
             self.chunks = new_chunks + self.chunks[:2] if not coof else self.chunks[1:] + new_chunks
 
         self.loading_map()
-        self.enemy_update()
-
-    def enemy_update(self):
-        self.enemy = []
-        for chunks in self.chunks:
-            for chunk in chunks:
-                self.enemy.append(chunk.get_enemy())
 
     def get_chunks(self):
         return self.chunks
@@ -88,31 +79,13 @@ class Map:
     def get_board(self):
         return self.board
 
-    def get_enemy(self):
-        return self.enemy
-
-    def get_start_chunks(self):
-        return self.chunks[0][0].get_coords()
-
-    def get_graph(self):
-        return self.graph
-
 
 class Chunk:
-    def __init__(self, id_chunk, x, y, sid, enemy=False):
-        self.id = id_chunk
+    def __init__(self, id, x, y, sid):
+        self.id = id
         self.x, self.y = x, y
         self.num = NUM_OF_CELLS_CHUNK
         self.table = filling_table(x, y, NUM_OF_CELLS_CHUNK, NUM_OF_CELLS_CHUNK, sid)
-        self.enemy = []
-        if enemy:
-            self.spawn_enemy(5)   # Кол-во будет зависеть от сложности
-
-    def spawn_enemy(self, count_enemy):
-        x = sample(range(self.x, self.x + self.num), count_enemy)
-        y = sample(range(self.y, self.y + self.num), count_enemy)
-        self.enemy = [(x[i], y[i]) for i in range(count_enemy)]
-        self.enemy = random_enemy(self.enemy)
 
     def get_chunk(self):
         return self.table
@@ -123,14 +96,12 @@ class Chunk:
     def get_id(self):
         return self.id
 
-    def get_enemy(self):
-        return self.enemy
-
 
 class Camera:
     def __init__(self, map_object):
         self.pos = [0, 0]
         self.map_object = map_object
+        play_ambient()
 
     def move(self, direction):
         directions = {'North': (0, -1), 'South': (0, 1), 'East': (1, 0), 'West': (-1, 0)}
@@ -153,22 +124,9 @@ class Camera:
             self.map_object.chunk_update(self.pos)
             self.pos[1] = -self.pos[1] - 1
 
+        if abs(self.pos[0]) > NUM_OF_CELLS_CHUNK // 2 or abs(self.pos[1]) > NUM_OF_CELLS_CHUNK // 2:
+            raise IndexError(self.pos)
         return self.pos
-
-
-def creat_graph(grid):
-    def get_next_nodes(x, y):
-        check_next_node = lambda x, y: True if (0 <= x < NUM_OF_CELLS_CHUNK * 3
-                                                and 0 <= y < NUM_OF_CELLS_CHUNK * 3 and grid[y][x] > 3) else False
-        ways = [-1, 0], [0, -1], [1, 0], [0, 1]
-        return [(x + dx, y + dy) for dx, dy in ways if check_next_node(x + dx, y + dy)]
-
-    graph = {}
-    for y, row in enumerate(grid):
-        for x, col in enumerate(row):
-            if col:
-                graph[(x, y)] = graph.get((x, y), []) + get_next_nodes(x, y)
-    return graph
 
 
 CHUNKS = {}
