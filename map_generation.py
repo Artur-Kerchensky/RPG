@@ -1,6 +1,7 @@
 import math
-from DataBase import Base
-
+import pygame
+from database import Base
+from random import choice
 
 def findnoise2(x, y):
     n = int(x) + int(y) * 57
@@ -70,21 +71,25 @@ def join_table(list_table, direction='width'):
 
 
 def get_bioms(altitude):
-    res = bd.get_all_information('id', 'Bioms', f'min_altitude <= {altitude} and {altitude} <= max_altitude')
+    res = database.get_all_information('id', 'Bioms', f'min_altitude <= {altitude} and {altitude} <= max_altitude')
     if res:
         return res[0][0]
-    return 0
+    return 0    
 
 
 class Biom:
-    def __init__(self, name, color, min_altitude, max_altitude):
+    def __init__(self, name, base, advanced, min_altitude, max_altitude):
         self.name = name
-        self.color = color
+        self.sprite_base = base
+        self.sprite_advanced = advanced
         self.min_altitude = min_altitude
         self.max_altitude = max_altitude
-
-    def get_color(self):
-        return self.color
+    
+    def get_base(self):
+        return self.sprite_base
+    
+    def get_advanced(self):
+        return self.sprite_advanced
 
     def get_min_altitude(self):
         return self.min_altitude
@@ -93,8 +98,8 @@ class Biom:
         return self.max_altitude
 
 
-bd = Base()
+database = Base()
 BIOMS = {}
-for biom in bd.get_all_information('*', 'Bioms'):
-    id, name, color, min_altitude, max_altitude = (j for j in biom)
-    BIOMS[id] = Biom(name, color, min_altitude, max_altitude)
+for biom in database.get_all_information('*', 'Bioms'):
+    id, name, base, advanced, min_altitude, max_altitude = (j for j in biom)
+    BIOMS[id] = Biom(name, base, advanced, min_altitude, max_altitude)
