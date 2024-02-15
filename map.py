@@ -82,6 +82,10 @@ class Map:
             for chunk in chunks:
                 self.enemy.append(chunk.get_enemy())
 
+    def get_coord(self, x, y):
+        x, y = x - self.get_start_chunks()[0], y - self.get_start_chunks()[1]
+        return x, y
+
     def get_chunks(self):
         return self.chunks
 
@@ -106,7 +110,7 @@ class Chunk:
         self.table = filling_table(x, y, NUM_OF_CELLS_CHUNK, NUM_OF_CELLS_CHUNK, sid)
         self.enemy = []
         if enemy:
-            self.spawn_enemy(5)   # Кол-во будет зависеть от сложности
+            self.spawn_enemy(0)   # Кол-во будет зависеть от сложности
 
     def spawn_enemy(self, count_enemy):
         x = sample(range(self.x, self.x + self.num), count_enemy)
@@ -158,11 +162,12 @@ class Camera:
 
 def creat_graph(grid):
     def get_next_nodes(x, y):
-        check_next_node = lambda x, y: True if (0 <= x < NUM_OF_CELLS_CHUNK * 3
-                                                and 0 <= y < NUM_OF_CELLS_CHUNK * 3 and grid[y][x] > 3) else False
-        ways = [-1, 0], [0, -1], [1, 0], [0, 1]
-        return [(x + dx, y + dy) for dx, dy in ways if check_next_node(x + dx, y + dy)]
-
+        if grid[x][y] > 3:
+            check_next_node = lambda x, y: True if (0 <= x < NUM_OF_CELLS_CHUNK * 3
+                                                    and 0 <= y < NUM_OF_CELLS_CHUNK * 3 and grid[y][x] > 3) else False
+            ways = [-1, 0], [0, -1], [1, 0], [0, 1]
+            return [(x + dx, y + dy) for dx, dy in ways if check_next_node(x + dx, y + dy)]
+        return []
     graph = {}
     for y, row in enumerate(grid):
         for x, col in enumerate(row):

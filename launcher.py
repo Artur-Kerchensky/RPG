@@ -75,7 +75,7 @@ def load_image(name, colorkey=None):
 
 def start_screen():
     data = load_config()
-    data["anySaves"] = 1 # Для переключения режима присутствия/отсутствия сохранений (пока)
+    data["anySaves"] = 0 # Для переключения режима присутствия/отсутствия сохранений (пока)
     font = pygame.font.SysFont('monotypecorsiva', 64)
     title = font.render('The Forgotten Lands', True, (211, 175, 115))
     title_wrap = font.render('The Forgotten Lands', True, (0, 0, 0))
@@ -161,7 +161,6 @@ def start_screen():
                 elif load_flag:
                     blitter_load(medium_context_menu, empty)
 
-
                 if 180 < x_pos < 299 and 130 < y_pos < 163 and settings_flag:
                     blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
                     screen.blit(res_option1_wrap, (180, 130))
@@ -184,7 +183,6 @@ def start_screen():
                     screen.blit(warning, (210, 290))
                 elif settings_flag:
                     blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
-
 
                 if 250 < x_pos < 286 and 200 < y_pos < 233 and exit_flag:
                     blitter_exit(small_context_menu, question, yes, no)

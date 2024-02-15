@@ -82,21 +82,40 @@ class Enemy(Creature):
         Creature.__init__(self, name, start_pos, hp, speed, attack, defense)
         self.giv_exp = giv_exp
         self.path = []
+        self.frees = False  # Проверка появления на суше
 
     def pathfinding(self, pos, chart):
         self.path = finding_path((self.x, self.y), pos, chart.get_graph(), chart.get_start_chunks())
         if not self.path:
             self.path = [' ']
 
-    def update(self, screen, pos):
-        x, y = self.x, self.y
-        pygame.draw.rect(screen, pygame.Color('red'), ((x - pos[0] + NUM_OF_CELLS_CHUNK // 2) * cell_size,
-                                                       (y - pos[1] + NUM_OF_CELLS_CHUNK // 2) * cell_size,
-                                                       cell_size, cell_size))
+    def examination(self, chart):
+        x, y = chart.get_coord(self.x, self.y)
+        try:
+            while chart.get_board()[y][x] < 3:
+                    x, y = chart.get_coord(self.x, self.y)
+
+                    direct = random.randint(0, 1)
+                    if direct:
+                        self.x += (-1 if x > int(NUM_OF_CELLS_CHUNK * 1.5) else 1)
+                    else:
+                        self.y += (-1 if y > int(NUM_OF_CELLS_CHUNK * 1.5) else 1)
+        except IndexError:
+            self.frees = True
+
+    def update(self, screen, pos, chart, moving=False):
+        if not self.frees:
+            x, y = ((self.x - pos[0] + NUM_OF_CELLS_CHUNK // 2),
+                    (self.y - pos[1] + NUM_OF_CELLS_CHUNK // 2))
+            if moving:
+                self.examination(chart)
+                self.move()
+            pygame.draw.rect(screen, pygame.Color('red'), (x * cell_size, y * cell_size, cell_size, cell_size))
+            self.pathfinding(pos, chart)
 
     def move(self, direction=None):
         if self.path:
-            Creature.move(self, self.path.pop(-1))
+            Creature.move(self, self.path.pop(0))
 
     def __str__(self):
         return self.name, self.get_pos()
