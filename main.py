@@ -48,7 +48,10 @@ if __name__ == '__main__':
                     key_move = {pygame.K_RIGHT: "East", pygame.K_LEFT: 'West',
                                 pygame.K_DOWN: 'South', pygame.K_UP: 'North'}
                     if event.key in key_move:
-                        player.move(key_move[event.key])
+
+                        direction = key_move[event.key]
+                        player.move(direction)
+                        player.update(screen, direction)
                         moving = True
                         pos = player.get_pos()
                         camera.move(key_move[event.key])
