@@ -2,3 +2,4 @@ resolutionWidth=1280
 resolutionHeight=720
 anySaves=1
 difficult=1
+volume=30

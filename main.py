@@ -29,21 +29,10 @@ if __name__ == '__main__':
         direction = "South"
         running = True
         moving = False
-#         SID = [40, 60, 80]
-#         start_x, start_y = 100, 10 ** 5
-#         player = Player([start_x, start_y], (100, 100))
-#         board = Map(SID, (start_x, start_y))
-#         camera = Camera(board)
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-#                 if event.type == pygame.MOUSEBUTTONDOWN:
-#                     SID = [randint(40, 60), randint(30, 90), randint(70, 90)]
-#                     pos = [randint(1000, 10**6), randint(1000, 10**6)]
-#                     player = Player(pos, (100, 100))
-#                     board = Map(SID, pos)
-#                     camera = Camera(board)
                 if event.type == pygame.KEYDOWN:
                     key_move = {pygame.K_RIGHT: "East", pygame.K_LEFT: 'West',
                                 pygame.K_DOWN: 'South', pygame.K_UP: 'North'}

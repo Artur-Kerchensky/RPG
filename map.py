@@ -3,14 +3,15 @@ from random import sample, choice
 
 from map_generation import filling_table, join_table, BIOMS
 from configuration import NUM_OF_CELLS_CHUNK, cell_size
-from configuration import load_image
+from configuration import load_config, load_image
 from object import random_enemy
 
 
 def play_ambient():
+    data = load_config()
     ambient = choice(["ambient1.mp3", "ambient2.mp3", "ambient3.mp3", "ambient4.mp3"])
     pygame.mixer.music.load(f"data/music/{ambient}")
-    pygame.mixer.music.set_volume(0.4)
+    pygame.mixer.music.set_volume(data["volume"]/100)
     pygame.mixer.music.play(-1)
 
 
