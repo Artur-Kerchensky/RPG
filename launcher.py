@@ -42,13 +42,16 @@ def blitter_load(*args):
 def blitter_settings(*args):
     components = [elem for elem in args]
     screen.blit(components[0], (120, 70))
-    screen.blit(components[1], (180, 100))
-    screen.blit(components[2], (180, 130))
-    screen.blit(components[3], (400, 130))
-    screen.blit(components[4], (180, 180))
-    screen.blit(components[5], (180, 210))
-    screen.blit(components[6], (290, 210))
-    screen.blit(components[7], (400, 210))
+    screen.blit(components[1], (180, 90))
+    screen.blit(components[2], (180, 120))
+    screen.blit(components[3], (400, 120))
+    screen.blit(components[4], (180, 170))
+    screen.blit(components[5], (180, 200))
+    screen.blit(components[6], (290, 200))
+    screen.blit(components[7], (400, 200))
+    screen.blit(components[8], (245, 250))
+    screen.blit(components[9], (485, 240))
+    screen.blit(components[10], (215, 235))
 
 
 def blitter_exit(*args):
@@ -59,8 +62,9 @@ def blitter_exit(*args):
     screen.blit(components[3], (410, 200))
 
 def play_music():
+    data = load_config()
     pygame.mixer.music.load("data/music/menu.mp3")
-    pygame.mixer.music.set_volume(0.4)
+    pygame.mixer.music.set_volume(data["volume"]/100)
     pygame.mixer.music.play(-1)
 
 
@@ -70,6 +74,13 @@ def start_screen():
     font = pygame.font.SysFont('monotypecorsiva', 64)
     title = font.render('The Forgotten Lands', True, (211, 175, 115))
     title_wrap = font.render('The Forgotten Lands', True, (0, 0, 0))
+    temp_volume = data["volume"]
+    
+    font = pygame.font.SysFont('monotypecorsiva', 48)
+    vol_option1 =  font.render('+', True, (63, 52, 39))
+    vol_option2 =  font.render('-', True, (63, 52, 39))
+    vol_option1_wrap =  font.render('+', True, (183, 152, 100))
+    vol_option2_wrap =  font.render('-', True, (183, 152, 100))
     
     font = pygame.font.SysFont('monotypecorsiva', 30)
     yes = font.render('Да', True, (63, 52, 39))
@@ -90,6 +101,7 @@ def start_screen():
     font = pygame.font.SysFont('monotypecorsiva', 24)
     settings_res = font.render('Разрешение экрана:', True, (63, 52, 39))
     settings_dif = font.render('Уровень сложности:', True, (63, 52, 39))
+    settings_vol = font.render(f'Громкость музыки ({data["volume"]}%)', True, (63, 52, 39))
     empty = font.render('Пусто', True, (63, 52, 39))
     empty_wrap = font.render('Пусто', True, (183, 152, 100))
     
@@ -101,7 +113,7 @@ def start_screen():
     
     medium_context_menu = pygame.transform.scale(load_image("context_menu.png", "menu"), (WIDTH // 1.5, HEIGHT // 1.5))
     small_context_menu = pygame.transform.scale(load_image("context_menu.png", "menu"), (WIDTH // 1.9, HEIGHT // 5.1))
-
+    
 
     
     if not data["anySaves"]:
@@ -115,7 +127,8 @@ def start_screen():
         load_wrap = font.render('Загрузить', True, (183, 152, 100))
         settings_wrap = font.render('Настройки', True, (183, 152, 100))
         ex_wrap = font.render('Выход', True, (183, 152, 100))
-
+        
+        
         background = pygame.transform.scale(load_image('background_no_saves.jpg', "menu"), (WIDTH, HEIGHT))
         access_flag = True
         load_flag = False
@@ -153,28 +166,46 @@ def start_screen():
                 elif load_flag:
                     blitter_load(medium_context_menu, empty)
 
+
                 if 180 < x_pos < 299 and 130 < y_pos < 163 and settings_flag:
-                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
-                    screen.blit(res_option1_wrap, (180, 130))
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif,
+                                     dif_option1, dif_option2, dif_option3, settings_vol, vol_option1, vol_option2)
+                    screen.blit(res_option1_wrap, (180, 120))
                     screen.blit(warning, (210, 290))
                 elif 400 < x_pos < 506 and 130 < y_pos < 163 and settings_flag:
-                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
-                    screen.blit(res_option2_wrap, (400, 130))
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif,
+                                     dif_option1, dif_option2, dif_option3, settings_vol, vol_option1, vol_option2)
+                    screen.blit(res_option2_wrap, (400, 120))
                     screen.blit(warning, (210, 290))
                 elif 180 < x_pos < 264 and 210 < y_pos < 243 and settings_flag:
-                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
-                    screen.blit(dif_option1_wrap, (180, 210))
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif,
+                                     dif_option1, dif_option2, dif_option3, settings_vol, vol_option1, vol_option2)
+                    screen.blit(dif_option1_wrap, (180, 200))
                     screen.blit(warning, (210, 290))
                 elif 290 < x_pos < 385 and 210 < y_pos < 243 and settings_flag:
-                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
-                    screen.blit(dif_option2_wrap, (290, 210))
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif,
+                                     dif_option1, dif_option2, dif_option3, settings_vol, vol_option1, vol_option2)
+                    screen.blit(dif_option2_wrap, (290, 200))
                     screen.blit(warning, (210, 290))
                 elif 400 < x_pos < 509 and 210 < y_pos < 243 and settings_flag:
-                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
-                    screen.blit(dif_option3_wrap, (400, 210))
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif,
+                                     dif_option1, dif_option2, dif_option3, settings_vol, vol_option1, vol_option2)
+                    screen.blit(dif_option3_wrap, (400, 200))
+                    screen.blit(warning, (210, 290))
+                elif 485 < x_pos < 513 and 240 < y_pos < 293 and settings_flag:
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif,
+                                     dif_option1, dif_option2, dif_option3, settings_vol, vol_option1, vol_option2)
+                    screen.blit(vol_option1_wrap, (485, 240))
+                    screen.blit(warning, (210, 290))
+                elif 215 < x_pos < 231 and 235 < y_pos < 288 and settings_flag:
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif,
+                                     dif_option1, dif_option2, dif_option3, settings_vol, vol_option1, vol_option2)
+                    screen.blit(vol_option2_wrap, (215, 235))
                     screen.blit(warning, (210, 290))
                 elif settings_flag:
-                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif,
+                                     dif_option1, dif_option2, dif_option3, settings_vol, vol_option1, vol_option2)
+
 
                 if 250 < x_pos < 286 and 200 < y_pos < 233 and exit_flag:
                     blitter_exit(small_context_menu, question, yes, no)
@@ -184,6 +215,7 @@ def start_screen():
                     screen.blit(no_wrap, (410, 200))
                 elif exit_flag:
                     blitter_exit(small_context_menu, question, yes, no)
+
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if 307 < x_pos < 391 and 162 < y_pos < 197 and access_flag:
@@ -196,7 +228,8 @@ def start_screen():
                     elif 276 < x_pos < 423 and 248 < y_pos < 283 and access_flag:
                         access_flag = False
                         settings_flag = True
-                        blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
+                        blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif,
+                                         dif_option1, dif_option2, dif_option3, settings_vol, vol_option1, vol_option2)
                     elif 180 < x_pos < 299 and 130 < y_pos < 163 and settings_flag:
                         load_config((1920, 1080), "res")
                     elif 400 < x_pos < 506 and 130 < y_pos < 163 and settings_flag:
@@ -274,29 +307,47 @@ def start_screen():
                     screen.blit(ex_wrap, (326, 300))
                 elif access_flag:
                     blitter(background, new, load, settings, ex, title_wrap, title, cont)
-
+                
+                
                 if 180 < x_pos < 299 and 130 < y_pos < 163 and settings_flag:
-                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
-                    screen.blit(res_option1_wrap, (180, 130))
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif,
+                                     dif_option1, dif_option2, dif_option3, settings_vol, vol_option1, vol_option2)
+                    screen.blit(res_option1_wrap, (180, 120))
                     screen.blit(warning, (210, 290))
                 elif 400 < x_pos < 506 and 130 < y_pos < 163 and settings_flag:
-                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
-                    screen.blit(res_option2_wrap, (400, 130))
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif,
+                                     dif_option1, dif_option2, dif_option3, settings_vol, vol_option1, vol_option2)
+                    screen.blit(res_option2_wrap, (400, 120))
                     screen.blit(warning, (210, 290))
                 elif 180 < x_pos < 264 and 210 < y_pos < 243 and settings_flag:
-                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
-                    screen.blit(dif_option1_wrap, (180, 210))
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif,
+                                     dif_option1, dif_option2, dif_option3, settings_vol, vol_option1, vol_option2)
+                    screen.blit(dif_option1_wrap, (180, 200))
                     screen.blit(warning, (210, 290))
                 elif 290 < x_pos < 385 and 210 < y_pos < 243 and settings_flag:
-                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
-                    screen.blit(dif_option2_wrap, (290, 210))
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif,
+                                     dif_option1, dif_option2, dif_option3, settings_vol, vol_option1, vol_option2)
+                    screen.blit(dif_option2_wrap, (290, 200))
                     screen.blit(warning, (210, 290))
                 elif 400 < x_pos < 509 and 210 < y_pos < 243 and settings_flag:
-                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
-                    screen.blit(dif_option3_wrap, (400, 210))
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif,
+                                     dif_option1, dif_option2, dif_option3, settings_vol, vol_option1, vol_option2)
+                    screen.blit(dif_option3_wrap, (400, 200))
+                    screen.blit(warning, (210, 290))
+                elif 485 < x_pos < 513 and 240 < y_pos < 293 and settings_flag:
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif,
+                                     dif_option1, dif_option2, dif_option3, settings_vol, vol_option1, vol_option2)
+                    screen.blit(vol_option1_wrap, (485, 240))
+                    screen.blit(warning, (210, 290))
+                elif 215 < x_pos < 231 and 235 < y_pos < 288 and settings_flag:
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif,
+                                     dif_option1, dif_option2, dif_option3, settings_vol, vol_option1, vol_option2)
+                    screen.blit(vol_option2_wrap, (215, 235))
                     screen.blit(warning, (210, 290))
                 elif settings_flag:
-                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif, dif_option1, dif_option2, dif_option3)
+                    blitter_settings(medium_context_menu, settings_res, res_option1, res_option2, settings_dif,
+                                     dif_option1, dif_option2, dif_option3, settings_vol, vol_option1, vol_option2)
+
 
                 if 250 < x_pos < 286 and 200 < y_pos < 233 and exit_flag:
                     blitter_exit(small_context_menu, question, yes, no)
@@ -332,6 +383,12 @@ def start_screen():
                         load_config(1, "dif")
                     elif 400 < x_pos < 509 and 210 < y_pos < 243 and settings_flag:
                         load_config(2, "dif")
+                    elif 485 < x_pos < 513 and 240 < y_pos < 293 and settings_flag:
+                        temp_volume += 10 
+                        load_config(min(temp_volume, 100), "vol")
+                    elif 215 < x_pos < 231 and 235 < y_pos < 288 and settings_flag:
+                        temp_volume -= 10 
+                        load_config(max(temp_volume, 0), "vol")
                     elif 307 < x_pos < 391 and 291 < y_pos < 326 and access_flag:
                         access_flag = False
                         exit_flag = True
@@ -359,6 +416,7 @@ def start_screen():
                             continue
             pygame.display.flip()
             clock.tick(FPS)
+    
 
 
 FPS = 60
@@ -368,7 +426,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT), flags=pygame.NOFRAME)
 pygame.display.set_caption('The Forgotten Lands')
 pygame.display.set_icon(load_image("icon.jpg", "menu"))
 clock = pygame.time.Clock()
-
+    
 
 if __name__ == '__main__':
     pygame.init()

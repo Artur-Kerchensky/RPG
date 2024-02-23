@@ -36,18 +36,10 @@ if __name__ == '__main__':
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                # if event.type == pygame.MOUSEBUTTONDOWN:
-                #     SID = [randint(40, 60), randint(30, 90), randint(70, 90)]
-                #     pos = [randint(1000, 10**6), randint(1000, 10**6)]
-                #     player = Player(pos, (100, 100))
-                #     board = Map(SID, pos)
-                #     player.examination(board)
-                #     camera = Camera(board, [pos[0] - player.get_pos()[0], pos[1] - player.get_pos()[1]])
                 if event.type == pygame.KEYDOWN:
                     key_move = {pygame.K_RIGHT: "East", pygame.K_LEFT: 'West',
                                 pygame.K_DOWN: 'South', pygame.K_UP: 'North'}
                     if event.key in key_move:
-
                         direction = key_move[event.key]
                         moving = player.move(direction, board.get_impenetrable())
                         pos = player.get_pos()

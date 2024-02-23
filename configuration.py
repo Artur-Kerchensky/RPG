@@ -21,6 +21,16 @@ def load_image(name, folder, colorkey=None):
 def load_config(*args):
     global data
     filename = os.path.join('data/config', "cfg.txt")
+    if not os.listdir("data/config"):
+        config = open(filename, "w")
+        config.write("resolutionWidth=1280\n")
+        config.write("resolutionHeight=720\n")
+        if os.listdir(path='data/saves'):
+            config.write("anySaves=1\n")
+        else:
+            config.write("anySaves=0\n")
+        config.write("difficult=1\n")
+        config.write("volume=30\n")
     config = open(filename, "r+")
     raw_data = config.read()[:-1]
     if raw_data and args:
@@ -31,6 +41,7 @@ def load_config(*args):
             config.write(f"resolutionHeight={args[0][1]}\n")
             config.write(f"anySaves={data['anySaves']}\n")
             config.write(f"difficult={data['difficult']}\n")
+            config.write(f"volume={data['volume']}\n")
             config = open(filename, "r+")
             data = {item.split("=")[0]: int(item.split("=")[1]) for item in config.read()[:-1].split("\n")}
         if args[1] == "dif":
@@ -39,19 +50,20 @@ def load_config(*args):
             config.write(f"resolutionHeight={data['resolutionHeight']}\n")
             config.write(f"anySaves={data['anySaves']}\n")
             config.write(f"difficult={args[0]}\n")
+            config.write(f"volume={data['volume']}\n")
             config = open(filename, "r+")
             data = {item.split("=")[0]: int(item.split("=")[1]) for item in config.read()[:-1].split("\n")}
-    else:
-        config = open(filename, "w")
-        config.write("resolutionWidth=1280\n")
-        config.write("resolutionHeight=720\n")
-        if os.listdir(path='data/saves'):
-            config.write("anySaves=1\n")
-        else:
-            config.write("anySaves=0\n")
-        config.write("difficult=1\n")
-        config = open(filename, "r+")
-        data = {item.split("=")[0]: int(item.split("=")[1]) for item in config.read()[:-1].split("\n")}
+        if args[1] == "vol":
+            config = open(filename, "w")
+            config.write(f"resolutionWidth={data['resolutionWidth']}\n")
+            config.write(f"resolutionHeight={data['resolutionHeight']}\n")
+            config.write(f"anySaves={data['anySaves']}\n")
+            config.write(f"difficult={data['difficult']}\n")
+            config.write(f"volume={args[0]}\n")
+            config = open(filename, "r+")
+            data = {item.split("=")[0]: int(item.split("=")[1]) for item in config.read()[:-1].split("\n")}
+    if os.listdir("data/config"):
+        data = {item.split("=")[0]: int(item.split("=")[1]) for item in raw_data.split("\n")}
     config.close()
     return data
 
