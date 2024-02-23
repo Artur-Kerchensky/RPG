@@ -17,12 +17,12 @@ def play_ambient():
 class Map:
     def __init__(self, sid, start_coord=(0, 0)):
         self.size = NUM_OF_CELLS_CHUNK * 3
-        self.cell_size = cell_size
         self.start_x, self.start_y = start_coord[0], start_coord[1]
         self.sid = sid
         self.chunk_id = 0
         self.chunks = []
         self.board = []
+        self.impenetrable = []
         for i in [-1.5, -0.5, 0.5]:
             self.chunks.append([])
             for j in [-1.5, -0.5, 0.5]:
@@ -38,16 +38,19 @@ class Map:
         y = pos[1]
         for height in range(NUM_OF_CELLS_CHUNK + y, NUM_OF_CELLS_CHUNK * 2 + y):
             for width in range(NUM_OF_CELLS_CHUNK + x, NUM_OF_CELLS_CHUNK * 2 + x):
-                try:
-                    left = (width - NUM_OF_CELLS_CHUNK - x) * self.cell_size
-                    top = (height - NUM_OF_CELLS_CHUNK - y) * self.cell_size
-                    base_sprite = BIOMS[self.board[height][width]].get_base()
-                    advanced_sprite = BIOMS[self.board[height][width]].get_advanced()
-                    pygame.draw.rect(screen, pygame.Color(0, 0, 0), [left, top, self.cell_size, self.cell_size])
-                    screen.blit(pygame.transform.scale(load_image(base_sprite, "sprites"), (cell_size, cell_size)), (left, top))
-                    screen.blit(pygame.transform.scale(load_image(advanced_sprite, "sprites"), (cell_size, cell_size)), (left, top))
-                except Exception:
-                    print('Дальше карты не будет')
+                left = (width - NUM_OF_CELLS_CHUNK - x) * cell_size
+                top = (height - NUM_OF_CELLS_CHUNK - y) * cell_size
+                biom = BIOMS[self.board[height][width]]
+                base_sprite = biom.get_base()
+                advanced_sprite = biom.get_advanced()
+                rect = pygame.Rect(self.get_start_chunks()[0] + width + 1, self.get_start_chunks()[1] + height + 1, cell_size, cell_size)
+                if not biom.get_passability() and rect not in self.impenetrable:
+                    self.impenetrable.append(rect)
+                pygame.draw.rect(screen, pygame.Color(0, 0, 0), [left, top, cell_size, cell_size])
+                screen.blit(pygame.transform.scale(load_image(base_sprite, "sprites"),
+                                                   (cell_size, cell_size)), (left, top))
+                screen.blit(pygame.transform.scale(load_image(advanced_sprite, "sprites"),
+                                                   (cell_size, cell_size)), (left, top))
 
     def loading_map(self):
         self.board = []
@@ -75,7 +78,7 @@ class Map:
 
             for chunk in self.chunks[coof]:
                 x = chunk.get_coords()[0]
-                y = chunk.get_coords()[1] - NUM_OF_CELLS_CHUNK if not coof\
+                y = chunk.get_coords()[1] - NUM_OF_CELLS_CHUNK if not coof \
                     else chunk.get_coords()[1] + NUM_OF_CELLS_CHUNK
                 if not CHUNKS.get((x, y)):
                     CHUNKS[(x, y)] = Chunk(self.chunk_id, x, y, self.sid, enemy=True)
@@ -93,7 +96,7 @@ class Map:
                 self.enemy.append(chunk.get_enemy())
 
     def get_coord(self, x, y):
-        x, y = x - self.get_start_chunks()[0], y - self.get_start_chunks()[1]
+        x, y = int(x - self.get_start_chunks()[0] - 1), int(y - self.get_start_chunks()[1] - 1)
         return x, y
 
     def get_chunks(self):
@@ -111,6 +114,9 @@ class Map:
     def get_graph(self):
         return self.graph
 
+    def get_impenetrable(self):
+        return self.impenetrable
+
 
 class Chunk:
     def __init__(self, id_chunk, x, y, sid, enemy=False):
@@ -120,7 +126,7 @@ class Chunk:
         self.table = filling_table(x, y, NUM_OF_CELLS_CHUNK, NUM_OF_CELLS_CHUNK, sid)
         self.enemy = []
         if enemy:
-            self.spawn_enemy(5)   # Кол-во будет зависеть от сложности
+            self.spawn_enemy(4)   # Кол-во будет зависеть от сложности
 
     def spawn_enemy(self, count_enemy):
         x = sample(range(self.x, self.x + self.num), count_enemy)
@@ -142,14 +148,15 @@ class Chunk:
 
 
 class Camera:
-    def __init__(self, map_object):
-        self.pos = [0, 0]
+    def __init__(self, map_object, pos):
+        self.pos = pos
         self.map_object = map_object
         play_ambient()
 
-    def move(self, direction):
+    def move(self, direction, moving):
         directions = {'North': (0, -1), 'South': (0, 1), 'East': (1, 0), 'West': (-1, 0)}
-        self.pos = [self.pos[0] + directions[direction][0], self.pos[1] + directions[direction][1]]
+        if moving:
+            self.pos = [self.pos[0] + directions[direction][0], self.pos[1] + directions[direction][1]]
 
     def get_pos(self):
         if self.pos[0] > NUM_OF_CELLS_CHUNK // 2:
@@ -172,13 +179,18 @@ class Camera:
 
 
 def creat_graph(grid):
+
+    def check_next_node(x, y):
+        if 0 <= x < NUM_OF_CELLS_CHUNK * 3 and 0 <= y < NUM_OF_CELLS_CHUNK * 3:
+            return BIOMS[grid[y][x]].get_passability()
+        return False
+
     def get_next_nodes(x, y):
-        if grid[x][y] > 3:
-            check_next_node = lambda x, y: True if (0 <= x < NUM_OF_CELLS_CHUNK * 3
-                                                    and 0 <= y < NUM_OF_CELLS_CHUNK * 3 and grid[y][x] > 3) else False
-            ways = [-1, 0], [0, -1], [1, 0], [0, 1]
-            return [(x + dx, y + dy) for dx, dy in ways if check_next_node(x + dx, y + dy)]
-        return []
+        if not check_next_node(x, y):
+            return []
+        ways = [-1, 0], [0, -1], [1, 0], [0, 1]
+        return [(x + dx, y + dy) for dx, dy in ways if check_next_node(x + dx, y + dy)]
+
     graph = {}
     for y, row in enumerate(grid):
         for x, col in enumerate(row):

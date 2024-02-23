@@ -2,7 +2,7 @@ import pygame
 from map import Map, Camera
 from random import randint
 from configuration import NUM_OF_CELLS_CHUNK, cell_size, load_image
-from object import Player
+from object import Player, random_enemy
 from launcher import start_screen
 
 
@@ -21,40 +21,37 @@ if __name__ == '__main__':
         enemies = []
         SID = [randint(40, 60), randint(30, 90), randint(70, 90)]
         pos = [randint(1000, 10**6), randint(1000, 10**6)]
+        # pos = 1000, 4000
+        # SID = [40, 60, 80]
         player = Player(pos, (100, 100))
         board = Map(SID, pos)
-        camera = Camera(board)
+        player.examination(board)
+        camera = Camera(board, [pos[0] - player.get_pos()[0], pos[1] - player.get_pos()[1]])
         size = [NUM_OF_CELLS_CHUNK * cell_size] * 2
         screen = pygame.display.set_mode(size)
         direction = "South"
         running = True
         moving = False
-#         SID = [40, 60, 80]
-#         start_x, start_y = 100, 10 ** 5
-#         player = Player([start_x, start_y], (100, 100))
-#         board = Map(SID, (start_x, start_y))
-#         camera = Camera(board)
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-#                 if event.type == pygame.MOUSEBUTTONDOWN:
-#                     SID = [randint(40, 60), randint(30, 90), randint(70, 90)]
-#                     pos = [randint(1000, 10**6), randint(1000, 10**6)]
-#                     player = Player(pos, (100, 100))
-#                     board = Map(SID, pos)
-#                     camera = Camera(board)
+                # if event.type == pygame.MOUSEBUTTONDOWN:
+                #     SID = [randint(40, 60), randint(30, 90), randint(70, 90)]
+                #     pos = [randint(1000, 10**6), randint(1000, 10**6)]
+                #     player = Player(pos, (100, 100))
+                #     board = Map(SID, pos)
+                #     player.examination(board)
+                #     camera = Camera(board, [pos[0] - player.get_pos()[0], pos[1] - player.get_pos()[1]])
                 if event.type == pygame.KEYDOWN:
                     key_move = {pygame.K_RIGHT: "East", pygame.K_LEFT: 'West',
                                 pygame.K_DOWN: 'South', pygame.K_UP: 'North'}
                     if event.key in key_move:
 
                         direction = key_move[event.key]
-                        player.move(direction)
-                        player.update(screen, direction)
-                        moving = True
+                        moving = player.move(direction, board.get_impenetrable())
                         pos = player.get_pos()
-                        camera.move(key_move[event.key])
+                        camera.move(key_move[event.key], moving)
 
             for enemy_list in board.get_enemy():
                 if enemy_list:

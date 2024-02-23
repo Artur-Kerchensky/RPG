@@ -77,12 +77,13 @@ def get_bioms(altitude):
 
 
 class Biom:
-    def __init__(self, name, base, advanced, min_altitude, max_altitude):
+    def __init__(self, name, base, advanced, min_altitude, max_altitude, passability):
         self.name = name
         self.sprite_base = base
         self.sprite_advanced = advanced
         self.min_altitude = min_altitude
         self.max_altitude = max_altitude
+        self.passability = passability
     
     def get_base(self):
         return self.sprite_base
@@ -96,9 +97,16 @@ class Biom:
     def get_max_altitude(self):
         return self.max_altitude
 
+    def get_passability(self):
+        return self.passability
+
+    def get_name(self):
+        return self.name
+
 
 database = Base()
 BIOMS = {}
 for biom in database.get_all_information('*', 'Bioms'):
-    id, name, base, advanced, min_altitude, max_altitude = (j for j in biom)
-    BIOMS[id] = Biom(name, base, advanced, min_altitude, max_altitude)
+    id, name, base, advanced, min_altitude, max_altitude, passability = (j for j in biom)
+    BIOMS[id] = Biom(name, base, advanced, min_altitude, max_altitude, passability)
+
