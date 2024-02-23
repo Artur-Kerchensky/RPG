@@ -2,7 +2,7 @@ import pygame
 from map import Map, Camera
 from random import randint
 from configuration import NUM_OF_CELLS_CHUNK, cell_size, load_image
-from object import Player, random_enemy
+from object import Player
 from launcher import start_screen
 
 
@@ -32,18 +32,21 @@ if __name__ == '__main__':
         direction = "South"
         running = True
         moving = False
+        flag = True
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
                 if event.type == pygame.KEYDOWN:
                     key_move = {pygame.K_RIGHT: "East", pygame.K_LEFT: 'West',
-                                pygame.K_DOWN: 'South', pygame.K_UP: 'North'}
+                                pygame.K_DOWN: 'South', pygame.K_UP: 'North', pygame.K_s: 'South', pygame.K_w: 'North',
+                                pygame.K_d: 'East', pygame.K_a: 'West'}
                     if event.key in key_move:
                         direction = key_move[event.key]
                         moving = player.move(direction, board.get_impenetrable())
                         pos = player.get_pos()
                         camera.move(key_move[event.key], moving)
+                        flag = True
 
             for enemy_list in board.get_enemy():
                 if enemy_list:
@@ -51,11 +54,13 @@ if __name__ == '__main__':
                         if enemy not in enemies:
                             enemies.append(enemy)
 
-            screen.fill((0, 0, 0))
-            board.render(screen, camera.get_pos())
-            [enemy.update(screen, pos, board, moving) for enemy in enemies]
-            moving = False
-            player.render(screen, direction)
+            if flag:
+                screen.fill((0, 0, 0))
+                board.render(screen, camera.get_pos())
+                [enemy.update(screen, pos, board, moving) for enemy in enemies]
+                moving = False
+                player.render(screen, direction)
+                flag = False
             clock.tick(FPS)
             pygame.display.flip()
         pygame.quit()

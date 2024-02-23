@@ -4,7 +4,6 @@ from collections import deque
 
 from configuration import cell_size, NUM_OF_CELLS_CHUNK, load_image
 from database import Base
-from map_generation import BIOMS
 
 num_id = -1
 
@@ -35,7 +34,8 @@ class Creature(Object):
         self.rect = pygame.Rect(self.x, self.y, cell_size, cell_size)
 
     def move(self, direction, impenetrable=None):
-        directions = {'North': (0, -1), 'South': (0, 1), 'East': (1, 0), 'West': (-1, 0)}
+        directions = {'North': (0, -1), 'South': (0, 1), 'East': (1, 0), 'West': (-1, 0), None: (0, 0)}
+
         if direction in directions:
             direct_x, direct_y = directions[direction]
             self.rect = self.rect.move(direct_x, direct_y)
@@ -52,7 +52,6 @@ class Creature(Object):
         try:
             while chart.get_board()[y][x] < 3:
                     x, y = chart.get_coord(self.x, self.y)
-
                     direct = random.randint(0, 1)
                     if direct:
                         self.x += (-1 if x > int(NUM_OF_CELLS_CHUNK * 1.5) else 1)
@@ -123,8 +122,7 @@ class Enemy(Creature):
     def pathfinding(self, pos, chart):
         self.path = finding_path((self.x, self.y), pos, chart.get_graph(), chart.get_start_chunks())
         if not self.path:
-            self.path = [' ']
-
+            self.path = None
 
     def update(self, screen, pos, chart, moving=False):
         if not self.frees:
@@ -133,13 +131,15 @@ class Enemy(Creature):
             if moving:
                 self.pathfinding(pos, chart)
 
-            self.move()
+            self.move(chart)
             self.examination(chart)
-            pygame.draw.rect(screen, pygame.Color('red'), (x * cell_size, y * cell_size, cell_size, cell_size))
+            impenetrable = chart.get_impenetrable()
+            if not any(self.rect.contains(rect) for rect in impenetrable):
+                pygame.draw.rect(screen, pygame.Color('red'), (x * cell_size, y * cell_size, cell_size, cell_size))
 
-    def move(self, direction=None, impenetrable=None):
+    def move(self, chart, direction=None, impenetrable=None):
         if self.path:
-            Creature.move(self, self.path)
+            Creature.move(self, self.path, chart.get_impenetrable())
 
     def __str__(self):
         return self.name, self.get_pos()
