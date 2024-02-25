@@ -30,35 +30,13 @@ class Creature(Object):
         self.speed = speed
         self.attack = attack
         self.defense = defense if defense < 0 else None
-        self.frees = False  # Проверка появления на суше
-        self.rect = pygame.Rect(self.x, self.y, cell_size, cell_size)
 
-    def move(self, direction, impenetrable=None):
-        directions = {'North': (0, -1), 'South': (0, 1), 'East': (1, 0), 'West': (-1, 0), None: (0, 0)}
-
+    def move(self, direction):
+        directions = {'North': (0, -1), 'South': (0, 1), 'East': (1, 0), 'West': (-1, 0)}
         if direction in directions:
             direct_x, direct_y = directions[direction]
-            self.rect = self.rect.move(direct_x, direct_y)
-            if any(self.rect.contains(rect) for rect in impenetrable):
-                self.rect = self.rect.move(-direct_x, -direct_y)
-                return False
             self.x += direct_x
             self.y += direct_y
-            return True
-        return False
-
-    def examination(self, chart):
-        x, y = chart.get_coord(self.x, self.y)
-        try:
-            while chart.get_board()[y][x] < 3:
-                    x, y = chart.get_coord(self.x, self.y)
-                    direct = random.randint(0, 1)
-                    if direct:
-                        self.x += (-1 if x > int(NUM_OF_CELLS_CHUNK * 1.5) else 1)
-                    else:
-                        self.y += (-1 if y > int(NUM_OF_CELLS_CHUNK * 1.5) else 1)
-        except IndexError:
-            self.frees = True
 
     def take_damage(self, damage):
         self.hp -= damage * self.defense * 0.01
@@ -82,10 +60,10 @@ class Player(Creature):
         self.level = level
         self.experience = experience
         self.attributes = {'strength': attributes[0], 'agility': attributes[1], 'intelligence': attributes[2]}
-        self.walk = {"West": [load_image(f"walk_left{i}.png", "anims") for i in range(1, 5)],
-                     "East": [load_image(f"walk_right{i}.png", "anims") for i in range(1, 5)],
-                     "North": [load_image(f"walk_up{i}.png", "anims") for i in range(1, 5)],
-                     "South": [load_image(f"walk_down{i}.png", "anims") for i in range(1, 5)]}
+        self.walk = {"West": [load_image(f"walk_left{i}.png", "anims/player") for i in range(1, 5)],
+                     "East": [load_image(f"walk_right{i}.png", "anims/player") for i in range(1, 5)],
+                     "North": [load_image(f"walk_up{i}.png", "anims/player") for i in range(1, 5)],
+                     "South": [load_image(f"walk_down{i}.png", "anims/player") for i in range(1, 5)]}
         self.player_anim_count = 0
 
     def level_up(self, attribute):
@@ -97,13 +75,7 @@ class Player(Creature):
     def gain_experience(self, exp):
         self.experience += exp
 
-    def move(self, direction, impenetrable=None):
-        if Creature.move(self, direction, impenetrable):
-            self.update(direction)
-            return True
-        return False
-
-    def update(self, direction):
+    def update(self, screen, direction):
         if direction in self.walk.keys():
             self.player_anim_count = (self.player_anim_count + 1) % 4
 
@@ -118,29 +90,43 @@ class Enemy(Creature):
         Creature.__init__(self, name, start_pos, hp, speed, attack, defense)
         self.giv_exp = giv_exp
         self.path = []
+        self.frees = False  # Проверка появления на суше
+        self.walk = load_image(f"{self.name.lower()}_idle.png", f"anims/{self.name.lower()}")
 
     def pathfinding(self, pos, chart):
         self.path = finding_path((self.x, self.y), pos, chart.get_graph(), chart.get_start_chunks())
         if not self.path:
-            self.path = None
+            self.path = [' ']
+
+    def examination(self, chart):
+        x, y = chart.get_coord(self.x, self.y)
+        try:
+            while chart.get_board()[y][x] < 3:
+                    x, y = chart.get_coord(self.x, self.y)
+                    direct = random.randint(0, 1)
+                    if direct:
+                        self.x += (-1 if x > int(NUM_OF_CELLS_CHUNK * 1.5) else 1)
+                    else:
+                        self.y += (-1 if x > int(NUM_OF_CELLS_CHUNK * 1.5) else 1)
+        except IndexError:
+            self.frees = True
+        
 
     def update(self, screen, pos, chart, moving=False):
+        #directions = {'North': (0, -1), 'South': (0, 1), 'East': (1, 0), 'West': (-1, 0)}
         if not self.frees:
             x, y = ((self.x - pos[0] + NUM_OF_CELLS_CHUNK // 2),
                     (self.y - pos[1] + NUM_OF_CELLS_CHUNK // 2))
             if moving:
-                self.pathfinding(pos, chart)
+                self.examination(chart)
+                self.move()
+            screen.blit(self.walk, (x * cell_size - (0.3 * cell_size), y * cell_size - (0.5 * cell_size)))
+            self.pathfinding(pos, chart)
 
-            self.move(chart)
-            self.examination(chart)
-            impenetrable = chart.get_impenetrable()
-            if not any(self.rect.contains(rect) for rect in impenetrable):
-                pygame.draw.rect(screen, pygame.Color('red'), (x * cell_size, y * cell_size, cell_size, cell_size))
-
-    def move(self, chart, direction=None, impenetrable=None):
+    def move(self, direction=None):
         if self.path:
-            Creature.move(self, self.path, chart.get_impenetrable())
-
+            Creature.move(self, self.path.pop(0))
+                    
     def __str__(self):
         return self.name, self.get_pos()
 
@@ -180,15 +166,19 @@ def finding_path(start, end, graph, grid_start):
             res.append(path_segment)
             path_segment = visited[path_segment]
 
-        return res[-2:]
+        return res[-1:0:-1]
 
     def transformation(path):
-        transcription = {(1, 0): 'West', (0, 1): 'North', (-1, 0): 'East', (0, -1): 'South', (0, 0): False}
+        transcription = {(1, 0): 'West', (0, 1): 'North', (-1, 0): 'East', (0, -1): 'South'}
+        res = []
         x, y = path[0]
-        return transcription[(path[1][0] - x, path[1][1] - y)] if len(path) > 1 else False
+        for i in range(1, len(path)):
+            res.append(transcription[(x - path[i][0], y - path[i][1])])
+            x, y = path[i][0], path[i][1]
+        return res
 
-    start = (start[0] - grid_start[0] - 1, start[1] - grid_start[1] - 1)
-    end = (end[0] - grid_start[0] - 1, end[1] - grid_start[1] - 1)
+    start = (start[0] - grid_start[0], start[1] - grid_start[1])
+    end = (end[0] - grid_start[0], end[1] - grid_start[1])
     if all(abs(i) < NUM_OF_CELLS_CHUNK * 3 for i in start):
         path = bfs(start, end, graph)
         if path:
